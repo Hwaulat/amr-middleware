@@ -1,0 +1,1176 @@
+<title>AMR Integration Middleware</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: follows the Ragdalion Maintenance design system. Navy sidebar, white header, #F0F4F8 page, white 14px cards. */
+:root{
+  --bg:#F0F4F8; --card:#FFFFFF; --card-2:#F8FAFC; --fg:#0F1B2D; --muted:#64748B; --muted-2:#94A3B8; --border:#E8EDF3; --input:#F3F4F7;
+  --primary:#1F5AA6; --primary-ink:#1F5AA6; --primary-soft:#E7EFFA;
+  --side:#0D1B2E; --side-ink:#7A9BBE; --side-hover:#14263D; --side-label:#4C6886; --side-sub:#5B8FD6;
+  --safe:#15803D; --safe-soft:#DCFCE7; --under:#B95C00; --under-soft:#FEF0DB; --empty:#D4183D; --empty-soft:#FDE5EA;
+  --over:#7C3AED; --over-soft:#EFE7FE; --info:#1F5AA6; --info-soft:#E3EDFA;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px -1px rgba(0,0,0,.07);
+  --font:'Open Sans','Segoe UI',system-ui,sans-serif; --tick:1500ms;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0A0A; --card:#141414; --card-2:#1B1B1B; --fg:#FAFAFA; --muted:#A1A1A1; --muted-2:#7C7C7C; --border:#262626; --input:#262626;
+  --primary:#1F5AA6; --primary-ink:#6EA4EC; --primary-soft:#142640;
+  --side:#0B1626; --side-ink:#7A9BBE; --side-hover:#132438; --side-label:#4C6886; --side-sub:#5B8FD6;
+  --safe:#4ADE80; --safe-soft:#12301D; --under:#F5A524; --under-soft:#3A2A0E; --empty:#FB5A72; --empty-soft:#3A1219;
+  --over:#A78BFA; --over-soft:#2A1F45; --info:#6EA4EC; --info-soft:#142640; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0A0A; --card:#141414; --card-2:#1B1B1B; --fg:#FAFAFA; --muted:#A1A1A1; --muted-2:#7C7C7C; --border:#262626; --input:#262626;
+  --primary:#1F5AA6; --primary-ink:#6EA4EC; --primary-soft:#142640;
+  --side:#0B1626; --side-ink:#7A9BBE; --side-hover:#132438; --side-label:#4C6886; --side-sub:#5B8FD6;
+  --safe:#4ADE80; --safe-soft:#12301D; --under:#F5A524; --under-soft:#3A2A0E; --empty:#FB5A72; --empty-soft:#3A1219;
+  --over:#A78BFA; --over-soft:#2A1F45; --info:#6EA4EC; --info-soft:#142640; --shadow:none; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--card)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance}
+:focus-visible{outline:2px solid var(--primary-ink);outline-offset:2px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+.side{background:var(--side);color:var(--side-ink);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--side-hover)}
+.logo{width:34px;height:34px;border-radius:8px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px}
+.brand b{display:block;color:#fff;font-size:14px;font-weight:700;line-height:1.2}
+.brand span{display:block;color:var(--side-sub);font-size:11px}
+.nav{flex:1;overflow-y:auto;padding:8px 12px}
+.nav-g{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--side-label);padding:14px 4px 6px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--side-ink);font-size:14px;font-weight:500;margin-bottom:2px}
+.nav button:hover{background:var(--side-hover);color:#fff}
+.nav button[aria-current="page"]{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+.nav .lbl{flex:1}
+.badge{font-size:11px;font-weight:600;min-width:20px;text-align:center;padding:0 6px;border-radius:10px;background:var(--side-hover);color:#C9D7E6}
+.badge.hot{background:var(--empty);color:#fff}
+.side-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--side-hover);font-size:12px;font-weight:500;color:#96B4D7}
+.side-foot span{display:flex;align-items:center;gap:6px}
+.gdot{width:7px;height:7px;border-radius:50%;background:#22C55E}
+.gdot.off{background:var(--muted-2)}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);box-shadow:var(--shadow);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;min-height:64px;padding-block:10px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.top h1{font-size:16px;font-weight:600;margin-right:auto}
+.sim{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:6px 10px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary-ink)}
+.clock{text-align:right;line-height:1.2}
+.clock b{display:block;font-size:13px;font-weight:600}
+.clock span{font-size:11px;color:var(--muted)}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--muted);position:relative}
+.icon-btn:hover{background:var(--input);color:var(--fg)}
+.bell{position:relative}
+.bell-n{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--empty);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.bell-panel{position:absolute;right:0;top:44px;width:min(360px,calc(100vw - 32px));background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px rgba(15,27,45,.16);max-height:440px;overflow:auto;z-index:25}
+.bell-panel h3{font-size:14px;font-weight:600;padding:12px 16px;border-bottom:1px solid var(--border)}
+.bell-panel ul{list-style:none;margin:0;padding:0}
+.bell-panel li{padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;display:grid;gap:2px}
+.bell-panel time{font-size:11px;color:var(--muted)}
+.user{display:flex;align-items:center;gap:8px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
+.user select{border:0;background:none;font-weight:600;font-size:13px;padding:2px 0;cursor:pointer;max-width:190px}
+.user small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+
+main{padding-block:24px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:grid;gap:20px;align-content:start}
+.page-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.page-h h2{font-size:18px;font-weight:700}
+.page-h p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:80ch}
+.page-h .acts{display:flex;gap:8px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;padding:18px 20px 12px}
+.card-h h3{font-size:16px;font-weight:600}
+.card-h p{margin:2px 0 0;font-size:12px;color:var(--muted-2);max-width:72ch}
+.empty-state{padding:8px 20px 20px;color:var(--muted);font-size:13px}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.kpi{display:flex;gap:14px;align-items:flex-start;padding:18px 20px}
+.kbox{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none}
+.kbox.b{background:var(--info-soft);color:var(--info)}.kbox.o{background:var(--under-soft);color:var(--under)}.kbox.r{background:var(--empty-soft);color:var(--empty)}.kbox.g{background:var(--safe-soft);color:var(--safe)}
+.kpi-l{font-size:12px;font-weight:500;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+.kpi-v{font-size:24px;font-weight:700;line-height:1.25}
+.kpi-s{font-size:12px;color:var(--muted)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:13.5px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--card-2)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--empty)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px;border-radius:8px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg.i{width:16px;height:16px}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;user-select:none}
+.switch input{appearance:none;width:34px;height:20px;border-radius:10px;background:#CBCED4;position:relative;cursor:pointer;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--primary)}
+.switch input:checked::after{transform:translateX(14px)}
+
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th,.tbl td{text-align:left;padding:11px 16px;border-top:1px solid var(--border);vertical-align:middle}
+.tbl thead th{font-size:12px;font-weight:600;color:var(--muted);background:var(--card-2);border-top:1px solid var(--border);white-space:nowrap}
+.tbl tbody th{font-weight:400}
+.tbl td.num{text-align:right}
+.tbl tr.click{cursor:pointer}
+.tbl tr.click:hover>*{background:var(--card-2)}
+.code{font-weight:600}
+.part b{display:block;font-weight:600}
+.part span{display:block;color:var(--muted);font-size:12px}
+.sm-muted{font-size:12px;color:var(--muted)}
+
+.gauge{display:flex;align-items:center;gap:10px;min-width:150px}
+.g-bar{position:relative;flex:1;height:8px;border-radius:4px;background:var(--input);overflow:hidden}
+.g-bar span{position:absolute;inset:0 auto 0 0;border-radius:4px;transition:width .6s}
+.g-bar i{position:absolute;top:0;bottom:0;width:2px;background:var(--muted-2)}
+.g-num{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.g-num b{color:var(--fg);font-weight:600}
+.l-safe .g-bar span{background:var(--safe)}.l-under .g-bar span{background:var(--under)}.l-empty .g-bar span{background:var(--empty)}.l-over .g-bar span{background:var(--over)}
+.meta{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--input);color:var(--muted)}
+.c-safe{background:var(--safe-soft);color:var(--safe)}.c-under{background:var(--under-soft);color:var(--under)}.c-empty{background:var(--empty-soft);color:var(--empty)}
+.c-over{background:var(--over-soft);color:var(--over)}.c-info{background:var(--info-soft);color:var(--info)}
+.chip.ref::before{content:"";width:10px;height:10px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%}
+.link{background:none;border:0;padding:0;color:var(--primary-ink);font-weight:600;cursor:pointer}
+.link:hover{text-decoration:underline}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:0 20px 14px}
+.toolbar .note{color:var(--muted);font-size:12.5px}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--border);border-radius:12px;width:max-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:none;border-radius:8px;padding:7px 14px;font-weight:500;font-size:13.5px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--primary);color:#fff}
+
+.row-2{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:20px}
+.row-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.map-wrap{padding:0 14px 14px;overflow-x:auto}
+.floor{width:100%;min-width:640px;height:auto;display:block}
+.floor .zone{fill:var(--card-2);stroke:var(--border);stroke-width:1.5}
+.floor .zone.prod{fill:var(--input)}
+.floor .zl{font-size:11px;font-weight:600;letter-spacing:.04em;fill:var(--muted)}
+.floor .rk{fill:var(--card);stroke:var(--border);stroke-width:1.5}
+.floor .rk-id{font-size:9.5px;fill:var(--muted)}
+.floor .rk-q{font-size:14px;font-weight:700;fill:var(--fg)}
+.floor .rkf{transition:width .6s}
+.floor .f-safe{fill:var(--safe)}.floor .f-under{fill:var(--under)}.floor .f-empty{fill:var(--empty)}.floor .f-over{fill:var(--over)}
+.floor .conv{stroke:var(--muted-2);stroke-width:3;stroke-dasharray:6 5;opacity:.5}
+.floor .conv.run{stroke:var(--primary-ink);opacity:1;animation:flow .8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-11}}
+.floor .sens{fill:var(--border)}.floor .sens.on{fill:var(--primary-ink)}
+.floor .ptxt{font-size:13px;font-weight:600;fill:var(--muted);text-anchor:middle}
+.floor .ptxt.s{font-size:10.5px;font-weight:400}
+.floor .counter{fill:var(--primary-soft);stroke:var(--primary-ink);stroke-width:1.2}
+.floor .ctxt{font-size:10.5px;font-weight:600;letter-spacing:.1em;fill:var(--primary-ink)}
+.floor .dock{fill:none;stroke:var(--muted-2);stroke-width:1;stroke-dasharray:3 3}
+.floor .dtxt{font-size:9px;font-weight:600;fill:var(--muted)}
+.floor .buf{fill:var(--card);stroke:var(--primary-ink);stroke-width:1.2}
+.floor .link-l{stroke:var(--border);stroke-width:1.2;stroke-dasharray:2 4}
+.bot{transition:transform var(--tick) linear}
+.bot circle{fill:var(--muted);stroke:var(--card);stroke-width:2.5}
+.bot.b-Busy circle{fill:var(--primary)}.bot.b-Error circle{fill:var(--empty)}.bot.b-Charging circle{fill:var(--under)}
+.bot text{font-size:9px;fill:#fff;text-anchor:middle;font-weight:700}
+@media (prefers-reduced-motion:reduce){.bot,.floor .rkf,.g-bar span{transition:none}.floor .conv.run{animation:none}}
+
+.feed{list-style:none;margin:0;padding:0 20px 16px;max-height:420px;overflow:auto}
+.feed li{display:grid;grid-template-columns:40px auto minmax(0,1fr);gap:8px;align-items:baseline;padding:8px 0;border-top:1px solid var(--border);font-size:12.5px}
+.feed time{font-size:11.5px;color:var(--muted)}
+.src{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--input);color:var(--muted);white-space:nowrap}
+.msg{min-width:0;overflow-wrap:anywhere}
+
+.subs{display:grid;gap:6px;min-width:280px}
+.subs div{display:grid;grid-template-columns:76px minmax(90px,1fr) auto;gap:8px;align-items:center;font-size:12px}
+.subs .g-bar{height:6px}
+.robots{list-style:none;margin:0;padding:0 20px 18px;display:grid;gap:8px}
+.robots li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:10px}
+.rid{font-weight:700}
+.sig-list{list-style:none;margin:0;padding:0 20px 18px;display:grid;gap:10px}
+.sig{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px}
+.sig .stripe{grid-row:1/3;align-self:stretch;border-radius:2px}
+.st-FG_LOW{background:var(--info)}.st-RACK2_LOW{background:var(--safe)}.st-SUPPLIER_REQUEST{background:var(--under)}
+.sig .top-l{font-size:11.5px;color:var(--muted)}
+.sig .route{font-weight:600}
+.sig .sdesc{grid-column:2/4;color:var(--muted);font-size:12.5px}
+.integ{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:0 20px 18px}
+.integ div{border:1px solid var(--border);border-radius:10px;padding:14px;display:grid;gap:6px;align-content:start}
+.integ b{font-size:14px;font-weight:600}
+.integ span{font-size:12.5px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 14px}
+.filters button{border:1px solid var(--border);background:var(--card);border-radius:999px;padding:3px 12px;font-size:12.5px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.reqs{display:grid;gap:10px;padding:0 20px 18px}
+.req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:center;padding:14px 16px;border:1px solid var(--border);border-radius:10px}
+.req.urgent{border-color:var(--empty);background:var(--empty-soft)}
+.req h4{margin:0;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.req p{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+.req .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.rq-prog{display:grid;gap:6px;margin-top:10px;font-size:12.5px;color:var(--muted);max-width:520px}
+.rq-prog b{color:var(--fg);font-weight:600}
+.rq-prog .g-bar span+span{border-radius:0}
+.dl{grid-column:1/-1;display:grid;border-top:1px solid var(--border);margin-top:2px}
+.dl-row{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:9px 0 0;font-size:13px}
+.dl-row+.dl-row{border-top:1px dashed var(--border);margin-top:9px}
+.dl-act{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.dl-sum{display:flex;flex-wrap:wrap;gap:8px 20px;padding:12px 14px;border-radius:10px;background:var(--card-2);border:1px solid var(--border);font-size:13px;color:var(--muted)}
+.dl-sum b{color:var(--fg);font-weight:700}
+.mat{display:grid;gap:3px;font-size:12px}
+.mat span{display:flex;gap:6px;align-items:center}
+.ok-t{color:var(--safe);font-weight:600}.bad-t{color:var(--empty);font-weight:600}
+
+.scrim{position:fixed;inset:0;background:rgba(13,27,46,.45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--card);z-index:41;overflow-y:auto;padding:calc(20px + env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 22px;display:grid;gap:18px;align-content:start;box-shadow:-12px 0 32px rgba(13,27,46,.15)}
+.drawer header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.drawer h2{font-size:20px;font-weight:700}
+.drawer h4{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-size:12px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0;font-size:13.5px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:500}
+.fault{border:1px solid var(--empty);background:var(--empty-soft);border-radius:10px;padding:14px;display:grid;gap:10px}
+.fault b{color:var(--empty)}
+.fault .acts{display:flex;gap:8px;flex-wrap:wrap}
+.tl{list-style:none;margin:0;padding:0 0 0 16px;border-left:2px solid var(--border);display:grid;gap:10px}
+.tl li{position:relative;font-size:13px;display:flex;justify-content:space-between;gap:10px}
+.tl li::before{content:"";position:absolute;left:-23px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--muted-2)}
+.tl li.done::before{background:var(--safe);border-color:var(--safe)}.tl li.bad::before{background:var(--empty);border-color:var(--empty)}
+.tl time{font-size:12px;color:var(--muted)}
+pre{margin:0;background:var(--card-2);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;overflow-x:auto;line-height:1.5}
+.note-s{font-size:12px;color:var(--muted);margin:0}
+
+.modal{position:fixed;z-index:41;top:50%;left:50%;transform:translate(-50%,-50%);width:min(620px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow-y:auto;background:var(--card);border-radius:14px;box-shadow:0 24px 48px rgba(13,27,46,.25)}
+.modal form{display:grid;gap:16px;padding:22px}
+.modal header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.modal h2{font-size:18px;font-weight:700}
+.modal header p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.fgrid .full{grid-column:1/-1}
+.field{display:grid;gap:6px;min-width:0;align-content:start}
+.field .chk-l{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;cursor:pointer;width:max-content}
+.field .chk-l input{width:16px;height:16px;padding:0;margin:0;accent-color:var(--primary);background:none}
+.delay-box{display:grid;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px}
+.delay-in{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.field .delay-in input{width:110px;flex:none}
+.field label,.flabel{font-size:13px;font-weight:600}
+.field input,.field select,.field textarea,.bom-row input,.bom-row select{width:100%;height:38px;border-radius:10px;border:1px solid transparent;background:var(--input);padding:0 12px;font-size:13.5px}
+.field textarea{height:auto;min-height:150px;padding:10px 12px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus,.bom-row input:focus,.bom-row select:focus{outline:none;border-color:var(--primary-ink);background:var(--card)}
+.field input[readonly]{color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.err{font-size:12px;color:var(--empty);font-weight:500}
+.errbox{border:1px solid var(--empty);background:var(--empty-soft);color:var(--empty);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.errbox ul{margin:4px 0 0;padding-left:18px}
+.bom{display:grid;gap:8px}
+.bom-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 36px;gap:8px;align-items:center}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;border-top:1px solid var(--border);padding-top:16px}
+
+@media (max-width:1180px){.row-2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:880px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto}
+  .nav{display:flex;overflow-x:auto;padding:8px 12px;gap:4px}
+  .nav button{width:auto;white-space:nowrap;margin:0}
+  .nav-g,.side-foot{display:none}
+  .top{position:static;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .top h1{width:100%}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (max-width:520px){.kpis{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr}.req{grid-template-columns:1fr}.req .acts{justify-content:flex-start}.sig{grid-template-columns:4px minmax(0,1fr)}.sig .sdesc{grid-column:2}.clock{display:none}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">A</div><div><b>AMR Middleware</b><span>WMS · COMS · Linxin</span></div></div>
+    <nav class="nav" id="nav" aria-label="Modules"></nav>
+    <div class="side-foot"><span><i class="gdot" id="simDot"></i><span id="simTxt">Simulator running</span></span><span>v0.6</span></div>
+  </aside>
+  <div>
+    <header class="top">
+      <h1 id="title">Control Tower</h1>
+      <div class="sim">
+        <button class="btn sm" id="runBtn" data-act="run"></button>
+        <div class="seg" role="group" aria-label="Simulation speed"><button data-act="speed" data-id="1">1×</button><button data-act="speed" data-id="4">4×</button></div>
+        <label class="switch" for="autoplay" title="Plays supplier, dock and supervisor actions automatically so the chain keeps moving"><input type="checkbox" id="autoplay"> Auto-play</label>
+        <button class="btn sm" data-act="reset">Reset</button>
+      </div>
+      <button class="icon-btn" data-act="theme" aria-label="Toggle dark mode"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <div class="clock"><b id="clock">07:00</b><span>Shift 1 · simulated</span></div>
+      <div class="bell">
+        <button class="icon-btn" data-act="bell" aria-label="Notifications"><svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="bell-n" id="bellN" hidden></span></button>
+        <div class="bell-panel" id="bellPanel" hidden></div>
+      </div>
+      <div class="user"><div class="avatar" id="avatar">OP</div>
+        <div><label for="role" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">View as</label>
+          <select id="role"></select><small id="roleSub">Supervisor</small></div></div>
+    </header>
+    <main id="view"></main>
+  </div>
+</div>
+<div id="drawer"></div>
+<div id="modal"></div>
+
+<script>
+/* ---------- constants ---------- */
+const CUSTOMERS=['CV Maju Teknik','PT Duta Mesin','PT Karya Hidrolik','PT Sentosa Pompa','CV Andalan Motor'];
+const FAULTS=['Path blocked near {mp}','Obstacle detected, robot stopped','Rack not detected at {mp}','Localization lost, waiting for operator'];
+const PROD_MIN=6, STEP=.25, ROWH=50, OPEN_REQ=['Open','Acknowledged','In progress'];
+const IC={
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  factory:'<path d="M3 21V10l6 4V10l6 4V6l6 4v11z"/><path d="M7 17h2M12 17h2M17 17h2"/>',
+  inbox:'<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6H3v-6z"/>',
+  box:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  cart:'<path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/>',
+  bot:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 13v2M21 13v2"/>',
+  pulse:'<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+  db:'<ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v13c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-13M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/>',
+  truck:'<path d="M2 6h11v10H2zM13 10h4l4 3v3h-8"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+  log:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', x:'<path d="M6 6l12 12M18 6 6 18"/>', upload:'<path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/>',
+  play:'<path d="M7 5v14l11-7z"/>', pause:'<path d="M8 5v14M16 5v14"/>'
+};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const NAV=[
+  ['Core functions',[['tower','Control Tower','grid'],['production','Production Requests','factory']]],
+  ['Warehouse · WMS',[['inbound','Supplier Drop WH','inbox'],['finish','Finish Goods WH','box']]],
+  ['Orders · COMS',[['orders','Customer Orders','cart']]],
+  ['Orchestrator',[['missions','AMR Missions','bot'],['signals','Signals','pulse']]],
+  ['Setup system',[['master','Master Data','db'],['supplier','Supplier Portal','truck'],['audit','Log Trails','log']]]
+];
+const TITLES=Object.fromEntries(NAV.flatMap(g=>g[1]).map(x=>[x[0],x[1]]));
+
+let S, timer, mapEl=null, mapKey='', ptrDown=false, pending=false;
+
+/* ---------- helpers ---------- */
+const pad2=n=>String(n).padStart(2,'0');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=t=>{const m=((420+t)%1440+1440)%1440;return pad2(Math.floor(m/60))+':'+pad2(m%60)};
+const subOf=c=>S.subs.find(s=>s.code===c);
+const fgOf=c=>S.fgs.find(f=>f.code===c);
+const itemName=c=>(subOf(c)||fgOf(c)||{}).name||c;
+const live=m=>!['Completed','Cancelled'].includes(m.status);
+const openSig=s=>s.type==='SUPPLIER_REQUEST'?OPEN_REQ.includes(s.status):!['Resolved','Cancelled'].includes(s.status);
+const openPR=p=>!['Done','Rejected'].includes(p.status);
+const rowOf=id=>parseInt(id.slice(3),10)-1;
+function mp(loc){if(loc==='PROD-OUT')return'MP-400';const n=loc.slice(3);return'MP-'+({A1:'1',A2:'3',FG:'5'}[loc.slice(0,2)])+n}
+function locName(loc){if(loc==='PROD-OUT')return'Production OUT buffer';const r=S.racks[loc];return`Rack ${loc} · ${{A1:'supplier drop',A2:'line feed',FG:'finished goods'}[r.zone]}`}
+function mapH(){return 96+Math.max(S.subs.length,S.fgs.length)*ROWH+70}
+function locXY(loc){if(loc==='PROD-OUT')return{x:638,y:mapH()-84};const y=68+rowOf(loc)*ROWH+18;return{x:{A1:126,A2:216,FG:690}[loc.slice(0,2)],y}}
+function dock(zone,i){const y=mapH()-26;return zone==='A'?{x:150+i*40,y}:{x:680+i*40,y}}
+
+function audit(src,msg,ref,t){S.audit.unshift({t:t??S.t,src,msg,ref});if(S.audit.length>400)S.audit.pop()}
+function notify(to,msg){S.notifs.unshift({id:++S.seq.n,to,msg,t:S.t,read:false});if(S.notifs.length>100)S.notifs.pop()}
+function level(r){if(r.qty<=0)return'empty';if(r.qty<=r.min)return'under';if(r.qty>r.max)return'over';return'safe'}
+function refilling(r){
+  if(S.missions.some(m=>m.to===r.id&&live(m)))return true;
+  if(r.zone==='FG')return S.prs.some(p=>p.fg===r.item&&openPR(p)&&p.status!=='Pending approval');
+  if(r.zone==='A1')return S.deliveries.some(d=>d.item===r.item&&['In transit','Arrived'].includes(d.status));
+  return false;
+}
+const LVL={safe:['Safe','c-safe'],under:['Under stock','c-under'],empty:['Empty','c-empty'],over:['Over stock','c-over']};
+const chip=(cls,txt)=>`<span class="chip ${cls}">${txt}</span>`;
+const lvlChip=r=>{const l=LVL[level(r)];return chip(l[1],l[0])+(refilling(r)?' '+chip('c-info ref','Refilling'):'')};
+function gauge(r){const pct=Math.min(100,r.qty/r.max*100),mk=r.min/r.max*100;
+  return `<div class="gauge l-${level(r)}"><div class="g-bar"><span style="width:${pct}%"></span><i style="left:${mk}%"></i></div><div class="g-num"><b>${r.qty}</b> / ${r.max}</div></div>`}
+const MC={Created:'',Queued:'','Assigned':'c-info','In transit':'c-info',Completed:'c-safe',Failed:'c-empty',Cancelled:''};
+const OC={Received:'','Waiting stock':'c-under','Ready for pickup':'c-safe','Picked up':''};
+const SC={Open:'c-under',Acknowledged:'c-info','In progress':'c-info',Fulfilled:'c-safe','Closed short':'',Declined:'',Resolved:'c-safe',Cancelled:''};
+const DC={'Ready to ship':'c-under','In transit':'c-info',Arrived:'c-info',Received:'c-safe'};
+const inflight=s=>S.deliveries.filter(d=>d.req===s.id&&d.status!=='Received').reduce((a,d)=>a+d.qty,0);
+const remaining=s=>Math.max(0,s.qty-s.recv-inflight(s));
+const ctOf=id=>S.contracts.find(c=>c.id===id);
+const ctInflight=c=>S.deliveries.filter(d=>d.ct===c.id&&d.status!=='Received').reduce((a,d)=>a+d.qty,0);
+const ctRemaining=c=>c.committed==null?Infinity:Math.max(0,c.committed-c.delivered-ctInflight(c));
+const dnPrefix=sup=>sup.replace(/^PT\s+/,'').slice(0,3).toUpperCase();
+const PC={'Pending approval':'c-under','Waiting material':'c-under','In production':'c-info',Done:'c-safe',Rejected:''};
+const mChip=m=>chip(MC[m.status],m.status);
+const mLink=id=>`<button class="link" data-act="mission" data-id="${id}">${id}</button>`;
+const typeLabel=t=>t==='TRANSFER'?'Line-feed transfer':'FG put-away';
+const partCell=c=>`<div class="part"><b>${esc(c)}</b><span>${esc(itemName(c))}</span></div>`;
+
+/* ---------- state ---------- */
+function addSub(code,name,supplier,a1,a2,lead){
+  const n=pad2(S.subs.length+1);
+  S.subs.push({code,name,supplier,lead,r1:'A1-'+n,r2:'A2-'+n,lastDecline:-99});
+  S.racks['A1-'+n]={id:'A1-'+n,zone:'A1',item:code,qty:a1[0],min:a1[1],max:a1[2]};
+  S.racks['A2-'+n]={id:'A2-'+n,zone:'A2',item:code,qty:a2[0],min:a2[1],max:a2[2]};
+}
+function addFG(code,name,fg,bom){
+  const n=pad2(S.fgs.length+1);
+  S.fgs.push({code,name,rack:'FG-'+n,bom});
+  S.racks['FG-'+n]={id:'FG-'+n,zone:'FG',item:code,qty:fg[0],min:fg[1],max:fg[2]};
+  S.buffer[code]=0;
+}
+function initState(){
+  const keep=S?{role:'ops'}:{};
+  S={t:0,running:true,speed:1,faults:true,auto:true,approval:true,role:'ops',view:'tower',mtab:'fg',
+     racks:{},subs:[],fgs:[],suppliers:[],robots:[],missions:[],signals:[],prs:[],deliveries:[],contracts:[],orders:[],notifs:[],audit:[],buffer:{},alloc:{},
+     seq:{m:24080,s:310,p:540,po:415,n:0,d:880,c:2},flash:{in:-9,out:-9},auditFilter:'All',sel:null,bell:false,modal:null,...keep};
+  S.suppliers=[
+    {name:'PT Prima Cast',contact:'Budi Santoso',email:'supply@primacast.example'},
+    {name:'PT Sinar Logam',contact:'Rina Wulandari',email:'order@sinarlogam.example'},
+    {name:'PT Karet Jaya',contact:'Hendra Wijaya',email:'sales@karetjaya.example'}
+  ];
+  addSub('CST-410','Cast housing blank','PT Prima Cast',[40,14,60],[13,8,30],60);
+  addSub('GSK-410','Housing gasket','PT Karet Jaya',[50,14,60],[25,8,30],45);
+  addSub('BLT-M8','Bolt M8 × 20','PT Sinar Logam',[300,80,400],[90,40,120],30);
+  addSub('STB-220','Steel bracket blank','PT Sinar Logam',[12,14,60],[21,8,30],60);
+  addSub('BAR-305','Shaft bar stock','PT Sinar Logam',[52,14,60],[26,8,30],90);
+  addSub('BRG-305','Ball bearing 6204','PT Karet Jaya',[90,30,120],[40,16,60],45);
+  addFG('HSG-410','Pump Housing',[10,6,24],[{sub:'CST-410',qty:1},{sub:'GSK-410',qty:1},{sub:'BLT-M8',qty:4}]);
+  addFG('BRK-220','Brake Bracket',[19,6,24],[{sub:'STB-220',qty:1},{sub:'BLT-M8',qty:2}]);
+  addFG('SHF-305','Drive Shaft',[17,6,24],[{sub:'BAR-305',qty:1},{sub:'BRG-305',qty:2}]);
+  S.contracts=[
+    {id:'CT-01',supplier:'PT Karet Jaya',item:'GSK-410',committed:600,delivered:0,note:'Annual supply agreement 2026',active:true,lastT:-15},
+    {id:'CT-02',supplier:'PT Sinar Logam',item:'BLT-M8',committed:null,delivered:0,note:'Standing agreement, open quantity',active:true,lastT:-5}
+  ];
+  S.robots=[['LX-01','A',86],['LX-02','A',72],['LX-03','C',91],['LX-04','C',64]].map(([id,zone,battery])=>({id,zone,battery,status:'Idle',mission:null}));
+  S.orders=[
+    {po:'PO-2610-0411',customer:'PT Sentosa Pompa',item:'SHF-305',qty:4,status:'Picked up',t:-70,pickT:-50},
+    {po:'PO-2610-0412',customer:'CV Maju Teknik',item:'HSG-410',qty:6,status:'Received',t:-40},
+    {po:'PO-2610-0413',customer:'PT Duta Mesin',item:'BRK-220',qty:8,status:'Received',t:-25},
+    {po:'PO-2610-0414',customer:'PT Karya Hidrolik',item:'SHF-305',qty:5,status:'Received',t:-12}
+  ];
+  audit('ERP','Connector online. Pulled 4 purchase orders.',null,-45);
+  audit('Linxin','Fleet adapter connected (simulated). 4 robots reported.',null,-44);
+  audit('Sensor','Production IN/OUT sensors online (proposed).',null,-44);
+  mapEl=null;
+  for(let i=0;i<3;i++)tick(true);
+}
+
+/* ---------- engine ---------- */
+function newSignal(type,item,from,to,extra={}){const s={id:'SIG-'+(++S.seq.s),type,item,from,to,status:'Open',t:S.t,...extra};S.signals.unshift(s);return s}
+function newMission(type,item,from,to,qty,extra={}){
+  const m={id:'M-'+(++S.seq.m),type,item,from,to,qty,zone:type==='TRANSFER'?'A':'C',status:'Created',progress:0,robot:null,fault:null,picked:false,createdT:S.t,prio:type==='PUTAWAY'?1:2,history:[{s:'Created',t:S.t}],...extra};
+  S.missions.unshift(m);audit('Middleware',`${m.id} created: ${typeLabel(type).toLowerCase()}, ${qty} pcs ${item}, ${from} → ${to}.`,m.id);return m;
+}
+const setStatus=(m,s)=>{m.status=s;m.history.push({s,t:S.t})};
+const robotOf=m=>S.robots.find(r=>r.id===m.robot);
+function needs(pr){const f=fgOf(pr.fg);return f.bom.map(b=>{const s=subOf(b.sub);return{sub:b.sub,need:b.qty*pr.qty,have:S.racks[s.r2].qty}})}
+function maxBatch(f){const fg=S.racks[f.rack];let q=fg.max-fg.qty;f.bom.forEach(b=>{q=Math.min(q,Math.floor(S.racks[subOf(b.sub).r2].max/b.qty))});return q}
+
+function allocateOrders(){
+  S.fgs.forEach(f=>{
+    const fg=S.racks[f.rack];
+    let alloc=S.orders.filter(o=>o.item===f.code&&o.status==='Ready for pickup').reduce((a,o)=>a+o.qty,0);
+    S.orders.filter(o=>o.item===f.code&&(o.status==='Received'||o.status==='Waiting stock')).sort((a,b)=>a.t-b.t).forEach(o=>{
+      if(fg.qty-alloc>=o.qty){alloc+=o.qty;o.status='Ready for pickup';o.readyT=S.t;audit('COMS',`${o.po} allocated from ${fg.id}. Ready for customer pickup.`,o.po)}
+      else if(o.status==='Received'){o.status='Waiting stock';audit('COMS',`${o.po} waiting stock: ${o.qty} pcs ${f.code} not available.`,o.po);notify('ops',`${o.po} (${o.customer}) is waiting for ${f.code} stock.`)}
+    });
+    S.alloc[f.code]=alloc;
+  });
+}
+function createPR(code,qty,mode,reason){
+  const pr={id:'PR-'+(++S.seq.p),fg:code,qty,mode,reason,status:S.approval?'Pending approval':'Waiting material',t:S.t,history:[]};
+  S.prs.unshift(pr);
+  if(mode==='Auto')newSignal('FG_LOW',code,'Finish Goods WH','Production request',{qty,ref:pr.id});
+  audit('WMS',`${pr.id} created (${mode.toLowerCase()}): ${qty} pcs ${code}. ${reason}`,pr.id);
+  if(S.approval)notify('ops',`${pr.id} needs supervisor approval: ${qty} pcs ${code}.`);
+  return pr;
+}
+function approvePR(pr,by){pr.status='Waiting material';pr.approvedT=S.t;audit('WMS',`${pr.id} approved by ${by}. Material released to line.`,pr.id)}
+function checkFG(){
+  S.fgs.forEach(f=>{
+    const fg=S.racks[f.rack],avail=fg.qty-(S.alloc[f.code]||0);
+    const busy=S.prs.some(p=>p.fg===f.code&&openPR(p))||S.missions.some(m=>m.type==='PUTAWAY'&&m.item===f.code&&live(m))||S.buffer[f.code]>0;
+    const q=maxBatch(f);
+    if(avail<=fg.min&&!busy&&q>0)createPR(f.code,q,'Auto',`${fg.id} free stock ${avail} ≤ min ${fg.min}.`);
+  });
+}
+function processPRs(){
+  S.prs.forEach(pr=>{
+    if(pr.status==='Pending approval'&&S.auto&&S.t-pr.t>=2)approvePR(pr,'supervisor (auto-play)');
+    else if(pr.status==='Waiting material'){
+      const ns=needs(pr);
+      if(ns.every(n=>n.have>=n.need)){
+        ns.forEach(n=>{S.racks[subOf(n.sub).r2].qty-=n.need});
+        pr.status='In production';pr.start=S.t;S.flash.in=S.t;
+        const sig=S.signals.find(s=>s.ref===pr.id);if(sig)sig.status='In progress';
+        audit('Sensor',`PROD IN · ${pr.id}: ${ns.map(n=>n.need+' '+n.sub).join(', ')} left Rack A2 via conveyor.`,pr.id);
+      }
+    }else if(pr.status==='In production'&&S.t-pr.start>=PROD_MIN){
+      pr.status='Done';pr.doneT=S.t;S.flash.out=S.t;S.buffer[pr.fg]+=pr.qty;
+      audit('Sensor',`PROD OUT · ${pr.qty} pcs ${pr.fg} finished, waiting at OUT buffer (${pr.id}).`,pr.id);
+      newMission('PUTAWAY',pr.fg,'PROD-OUT',fgOf(pr.fg).rack,pr.qty,{job:pr.id});
+    }
+  });
+  S.prs=S.prs.filter((p,i)=>openPR(p)||i<40);
+}
+function checkRack2(){
+  S.subs.forEach(s=>{
+    const r1=S.racks[s.r1],r2=S.racks[s.r2];
+    const need=S.prs.filter(p=>p.status==='Waiting material').reduce((a,p)=>a+(needs(p).find(n=>n.sub===s.code)?.need||0),0);
+    const active=S.missions.some(m=>m.type==='TRANSFER'&&m.item===s.code&&live(m));
+    if((r2.qty<=r2.min||r2.qty<need)&&!active){
+      const qty=Math.min(r2.max-r2.qty,r1.qty);
+      if(qty>0){const m=newMission('TRANSFER',s.code,r1.id,r2.id,qty);newSignal('RACK2_LOW',s.code,'Rack '+r2.id,'AMR transfer',{qty,ref:m.id})}
+    }
+  });
+}
+function checkRack1(){
+  S.subs.forEach(s=>{
+    const r1=S.racks[s.r1];
+    const reserved=S.missions.filter(m=>m.type==='TRANSFER'&&m.item===s.code&&live(m)&&!m.picked).reduce((a,m)=>a+m.qty,0);
+    const cin=S.deliveries.filter(d=>d.ct&&d.item===s.code&&d.status!=='Received').reduce((a,d)=>a+d.qty,0);
+    const eff=r1.qty-reserved+cin;
+    const open=S.signals.find(x=>x.type==='SUPPLIER_REQUEST'&&x.item===s.code&&openSig(x));
+    if(open){
+      if(r1.qty<=0&&open.prio!=='Urgent'&&['Open','Acknowledged'].includes(open.status)){open.prio='Urgent';notify(s.supplier,`${open.id} is now urgent: Rack ${r1.id} is empty.`);audit('WMS',`${open.id} escalated to urgent. ${r1.id} is empty.`,open.id)}
+      return;
+    }
+    if(eff<=r1.min&&S.t-s.lastDecline>=20){
+      const qty=r1.max-Math.max(0,eff),prio=eff<=0?'Urgent':'Normal';
+      const x=newSignal('SUPPLIER_REQUEST',s.code,'Supplier Drop WH',s.supplier,{qty,prio,eta:null,recv:0});
+      audit('WMS',`${r1.id} under stock (${Math.max(0,eff)} pcs). ${prio} request ${x.id} sent to ${s.supplier}: ${qty} pcs ${s.code}.`,x.id);
+      notify(s.supplier,`${prio==='Urgent'?'URGENT · ':''}New request ${x.id}: ${qty} pcs ${s.code} (${s.name}) for Rack ${r1.id}.`);
+    }
+  });
+}
+function ackReq(s,mins,by){s.status='Acknowledged';s.ackT=S.t;s.eta=S.t+mins;audit('Supplier',`${s.to} acknowledged ${s.id}${by?' ('+by+')':''}. ETA ${fmt(s.eta)}.`,s.id);notify('ops',`${s.to} acknowledged ${s.id} (${s.qty} pcs ${s.item}). ETA ${fmt(s.eta)}.`)}
+function createDelivery(s,qty,dn,plate,by,delay=0){
+  const d={id:'DLV-'+(++S.seq.d),req:s.id,item:s.item,supplier:s.to,qty,dn,plate,delay,status:'Ready to ship',readyT:S.t};
+  if(delay>0){s.eta=(s.eta??S.t)+delay;audit('Supplier',`${s.to} reported a ${delay} min delay on ${d.id}. New ETA ${fmt(s.eta)}.`,s.id);notify('ops',`${s.to} reported a ${delay} min delay for ${s.id}. New ETA ${fmt(s.eta)}.`)}
+  S.deliveries.unshift(d);s.status='In progress';
+  audit('Supplier',`${s.to} prepared ${d.id} (${dn})${by?' ('+by+')':''}: ${qty} of ${s.qty} pcs ${s.item} ready to ship. ${remaining(s)} pcs still to plan.`,s.id);
+  notify('ops',`${s.to} has ${qty} pcs ${s.item} ready to ship (${dn}, ${s.id}).`);return d;
+}
+function createContractDelivery(c,qty,dn,plate,by){
+  const d={id:'DLV-'+(++S.seq.d),req:null,ct:c.id,item:c.item,supplier:c.supplier,qty,dn,plate,delay:0,status:'Ready to ship',readyT:S.t};
+  S.deliveries.unshift(d);c.lastT=S.t;
+  audit('Supplier',`${c.supplier} prepared ${d.id} (${dn})${by?' ('+by+')':''} under contract ${c.id}: ${qty} pcs ${c.item}.`,c.id);
+  notify('ops',`${c.supplier} has ${qty} pcs ${c.item} ready to ship under ${c.id} (${dn}).`);return d;
+}
+function dispatchDelivery(d,mins,by){
+  d.status='In transit';d.departT=S.t;d.arrive=S.t+mins;
+  audit('Supplier',`${d.id} dispatched by ${d.supplier}${by?' ('+by+')':''}: ${d.qty} pcs ${d.item}, vehicle ${d.plate||'not given'}, arrives ${fmt(d.arrive)}.`,d.req||d.ct);
+  notify('ops',`${d.id} from ${d.supplier} is on the way: ${d.qty} pcs ${d.item}, arrives ${fmt(d.arrive)}.`);
+}
+function receiveDelivery(d,actual,reason,by){
+  const s=d.req?S.signals.find(x=>x.id===d.req):null,c=d.ct?ctOf(d.ct):null,r1=S.racks[subOf(d.item).r1],diff=actual-d.qty;
+  r1.qty+=actual;d.status='Received';d.recvQty=actual;d.recvT=S.t;d.reason=reason;if(s)s.recv+=actual;if(c)c.delivered+=actual;
+  audit('WMS',`Goods receipt${by?' ('+by+')':''}: ${d.id} (${d.dn}) ${actual} of ${d.qty} pcs ${d.item} into ${r1.id}.${diff?` Difference ${diff>0?'+':''}${diff}: ${reason}.`:''}`,d.req||d.ct);
+  if(diff)notify(d.supplier,`${d.id} received with a difference: ${actual} of ${d.qty} pcs (${reason}).`);
+  if(c){notify(d.supplier,`${d.id} received under ${c.id}: ${actual} pcs.${c.committed!=null?` ${Math.max(0,c.committed-c.delivered)} pcs left on the contract.`:''}`)}
+  else if(s.recv>=s.qty){s.status='Fulfilled';s.doneT=S.t;notify(d.supplier,`${s.id} fulfilled: ${s.recv} of ${s.qty} pcs received.`);audit('WMS',`${s.id} fulfilled. ${s.recv} of ${s.qty} pcs received.`,s.id)}
+  else notify(d.supplier,`${d.id} received: ${actual} pcs. ${s.qty-s.recv} pcs still open on ${s.id}.`);
+}
+function closeShort(s){s.status='Closed short';s.doneT=S.t;audit('WMS',`${s.id} closed by operations with ${s.recv} of ${s.qty} pcs received.`,s.id);notify(s.to,`${s.id} was closed by the plant at ${s.recv} of ${s.qty} pcs. No further delivery needed.`)}
+const autoDN=s=>`SJ/${s.to.replace(/^PT\s+/,'').slice(0,3).toUpperCase()}/${S.seq.d+1}`;
+function declineReq(s){s.status='Declined';s.doneT=S.t;subOf(s.item).lastDecline=S.t;audit('Supplier',`${s.to} cannot fulfil ${s.id}. A new request goes out in 20 min if stock is still low.`,s.id);notify('ops',`${s.to} declined ${s.id} (${s.qty} pcs ${s.item}). Consider another supplier.`)}
+function supplierTick(){
+  S.signals.filter(s=>s.type==='SUPPLIER_REQUEST').forEach(s=>{
+    if(s.status==='Open'){
+      if(!s.escalated&&S.t-s.t>=10){s.escalated=true;notify('ops',`${s.to} has not acknowledged ${s.id} after 10 min.`);audit('Middleware',`${s.id} not acknowledged within 10 min. Escalated to operations.`,s.id)}
+      if(S.auto&&S.t-s.t>=4)ackReq(s,20,'auto-play');
+    }else if(S.auto&&['Acknowledged','In progress'].includes(s.status)&&remaining(s)>0&&!inflight(s)&&S.t-(s.ackT??s.t)>=6)
+      createDelivery(s,remaining(s),autoDN(s),'B '+(9100+Math.floor(Math.random()*800))+' KX','auto-play');
+  });
+  S.deliveries.forEach(d=>{
+    if(d.status==='Ready to ship'&&S.auto&&S.t-d.readyT>=2)dispatchDelivery(d,8,'auto-play');
+    else if(d.status==='In transit'&&S.t>=d.arrive){d.status='Arrived';d.arrivedT=S.t;audit('WMS',`${d.id} from ${d.supplier} arrived at the dock (${d.dn}).`,d.req||d.ct);notify('ops',`${d.id} arrived at the dock: ${d.qty} pcs ${d.item}. Confirm goods receipt.`)}
+    else if(d.status==='Arrived'&&S.auto&&S.t-d.arrivedT>=2)receiveDelivery(d,d.qty,'','auto-play');
+  });
+  if(S.auto)S.contracts.filter(c=>c.active&&S.t-c.lastT>=30&&!ctInflight(c)).forEach(c=>{const cap=ctRemaining(c);if(cap<=0)return;
+    createContractDelivery(c,Math.min(cap,40+Math.floor(Math.random()*41)),`SJ/${dnPrefix(c.supplier)}/${S.seq.d+1}`,'B '+(9100+Math.floor(Math.random()*800))+' KX','auto-play')});
+  S.deliveries=S.deliveries.filter((d,i)=>d.status!=='Received'||i<80);
+}
+function failMission(m,reason){setStatus(m,'Failed');m.fault=reason;const r=robotOf(m);if(r)r.status='Error';audit('Linxin',`${m.id} failed on ${m.robot}: ${reason}.`,m.id);notify('ops',`${m.id} failed on ${m.robot}: ${reason}.`)}
+function processMissions(){
+  [...S.missions].sort((a,b)=>a.prio-b.prio||a.createdT-b.createdT).forEach(m=>{
+    if(m.status==='Created'&&S.t>m.createdT){setStatus(m,'Queued');audit('Middleware',`${m.id} validated. ${m.from} → ${mp(m.from)}, ${m.to} → ${mp(m.to)}. Queued.`,m.id)}
+    else if(m.status==='Queued'){const r=S.robots.find(r=>r.zone===m.zone&&r.status==='Idle');
+      if(r){r.status='Busy';r.mission=m.id;m.robot=r.id;setStatus(m,'Assigned');audit('Linxin',`${m.id} accepted by fleet manager, assigned to ${r.id}.`,m.id)}}
+    else if(m.status==='Assigned'){
+      if(m.type==='TRANSFER'){const r1=S.racks[m.from],q=Math.min(m.qty,r1.qty);if(q===0){failMission(m,'Source rack empty at pickup');return}r1.qty-=q;m.qty=q}
+      else S.buffer[m.item]=Math.max(0,S.buffer[m.item]-m.qty);
+      m.picked=true;m.progress=0;setStatus(m,'In transit');audit('Linxin',`${m.id} pickup done at ${mp(m.from)}. Moving to ${mp(m.to)}.`,m.id);
+    }else if(m.status==='In transit'){
+      if(S.faults&&Math.random()<.03){failMission(m,FAULTS[Math.floor(Math.random()*FAULTS.length)].replace('{mp}',mp(m.to)));return}
+      m.progress=Math.min(1,m.progress+STEP);
+      if(m.progress>=1){S.racks[m.to].qty+=m.qty;setStatus(m,'Completed');const r=robotOf(m);if(r){r.status='Idle';r.mission=null}
+        audit('Linxin',`${m.id} completed. ${m.qty} pcs ${m.item} dropped at ${m.to}.`,m.id);
+        audit(m.type==='TRANSFER'?'WMS':'COMS',`Stock updated: ${m.to} now ${S.racks[m.to].qty} pcs ${m.item}.`,m.id);
+        const sig=S.signals.find(s=>s.ref===m.id||(m.job&&s.ref===m.job));if(sig)sig.status='Resolved';}
+    }
+  });
+  S.missions=S.missions.filter((m,i)=>live(m)||i<60);
+}
+function robotsTick(){S.robots.forEach(r=>{
+  if(r.status==='Busy')r.battery=Math.max(5,r.battery-1.2);
+  else if(r.status==='Idle'){r.battery=Math.min(100,r.battery+.6);if(r.battery<25){r.status='Charging';audit('Linxin',`${r.id} battery ${Math.round(r.battery)}%, going to charge.`)}}
+  else if(r.status==='Charging'){r.battery=Math.min(100,r.battery+4);if(r.battery>=85){r.status='Idle';audit('Linxin',`${r.id} charged, back in service.`)}}
+})}
+function pullPO(){const f=S.fgs[Math.floor(Math.random()*S.fgs.length)];
+  const o={po:'PO-2610-0'+(++S.seq.po),customer:CUSTOMERS[Math.floor(Math.random()*CUSTOMERS.length)],item:f.code,qty:3+Math.floor(Math.random()*6),status:'Received',t:S.t};
+  S.orders.unshift(o);audit('ERP',`${o.po} synced to COMS: ${o.qty} pcs ${o.item} for ${o.customer}.`,o.po)}
+function pickup(o){const fg=S.racks[fgOf(o.item).rack];fg.qty=Math.max(0,fg.qty-o.qty);o.status='Picked up';o.pickT=S.t;audit('COMS',`${o.po} pickup scanned. ${o.qty} pcs ${o.item} left ${fg.id} with ${o.customer}.`,o.po)}
+function customerTick(){if(S.auto)S.orders.filter(o=>o.status==='Ready for pickup'&&S.t-(o.readyT??S.t)>=6).forEach(pickup)}
+function step(){customerTick();allocateOrders();checkFG();processPRs();checkRack2();checkRack1();processMissions();robotsTick();supplierTick();allocateOrders()}
+function tick(silent){S.t++;if(S.t%9===0)pullPO();step();if(!silent)render()}
+function schedule(){clearInterval(timer);document.documentElement.style.setProperty('--tick',(1500/S.speed)+'ms');if(S.running)timer=setInterval(()=>tick(),1500/S.speed)}
+
+/* ---------- shared fragments ---------- */
+const kpi=(icon,tone,l,v,s)=>`<div class="card kpi"><div class="kbox ${tone}">${ic(icon)}</div><div><div class="kpi-l">${l}</div><div class="kpi-v">${v}</div><div class="kpi-s">${s}</div></div></div>`;
+const feedItem=a=>`<li><time>${fmt(a.t)}</time><span class="src">${a.src}</span><span class="msg">${esc(a.msg)}</span></li>`;
+const legend=`<div class="legend"><span><i style="background:var(--safe)"></i>Safe</span><span><i style="background:var(--under)"></i>Under stock</span><span><i style="background:var(--empty)"></i>Empty</span><span><i style="background:var(--over)"></i>Over stock</span></div>`;
+function robotsList(zone){
+  return `<ul class="robots">${S.robots.filter(r=>r.zone===zone).map(r=>{const m=r.mission&&S.missions.find(x=>x.id===r.mission);
+    const cls={Idle:'',Busy:'c-info',Error:'c-empty',Charging:'c-under'}[r.status];
+    return `<li><span class="rid">${r.id}</span><div>${chip(cls,r.status)}<div class="sm-muted">${m?`On ${m.id} · ${m.from} → ${m.to}`:r.status==='Charging'?'At charging dock':'Waiting at dock'}</div></div><span class="sm-muted">${Math.round(r.battery)}%</span></li>`}).join('')}</ul>`;
+}
+function prCell(code){
+  const p=S.prs.find(p=>p.fg===code&&openPR(p)),b=S.buffer[code];let h='';
+  if(!p)h=chip('','Idle');
+  else if(p.status==='In production')h=`${chip(PC[p.status],p.status)}<div class="meta">${p.id} · ${p.qty} pcs · ${Math.max(0,PROD_MIN-(S.t-p.start))} min left</div>`;
+  else{const short=needs(p).filter(n=>n.have<n.need).length;h=`${chip(PC[p.status],p.status)}<div class="meta">${p.id} · ${p.qty} pcs${p.status==='Waiting material'&&short?` · ${short} sub part short`:''}</div>`}
+  if(b>0)h+=`<div class="meta">${b} pcs at OUT buffer</div>`;
+  return h;
+}
+function missionMini(type){const ms=S.missions.filter(m=>m.type===type).slice(0,6);
+  if(!ms.length)return `<p class="empty-state">No missions yet.</p>`;
+  return `<div class="tbl-wrap"><table class="tbl"><tbody>${ms.map(m=>`<tr><td>${mLink(m.id)}</td><td class="code">${m.item}</td><td class="num">${m.qty} pcs</td><td>${mChip(m)}</td></tr>`).join('')}</tbody></table></div>`}
+const pageH=(t,p,acts='')=>`<div class="page-h"><div><h2>${t}</h2>${p?`<p>${p}</p>`:''}</div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
+
+/* ---------- views ---------- */
+function vTower(){
+  const act=S.missions.filter(live),failed=act.filter(m=>m.status==='Failed').length;
+  const busy=S.robots.filter(r=>r.status==='Busy').length,chg=S.robots.filter(r=>r.status==='Charging').length;
+  const prs=S.prs.filter(openPR),pend=prs.filter(p=>p.status==='Pending approval').length;
+  const reqs=S.signals.filter(s=>s.type==='SUPPLIER_REQUEST'&&openSig(s)),urg=reqs.filter(s=>s.prio==='Urgent').length;
+  return pageH('Control Tower','Live view of the replenishment chain from supplier drop to customer pickup.')+
+  `<div class="kpis">
+    ${kpi('bot','b','Active missions',act.length,failed?`<span class="bad-t">${failed} failed, needs action</span>`:'No failed missions')}
+    ${kpi('grid','g','Robots busy',`${busy} / ${S.robots.length}`,chg?`${chg} charging`:'All robots in service')}
+    ${kpi('factory','o','Production requests',prs.length,pend?`<span class="bad-t">${pend} waiting approval</span>`:'None waiting approval')}
+    ${kpi('truck','r','Supplier requests',reqs.length,urg?`<span class="bad-t">${urg} urgent</span>`:'No urgent requests')}
+  </div>
+  <div class="row-2">
+    <section class="card"><header class="card-h"><div><h3>Floor</h3><p>Schematic layout. Robots move with each mission.</p></div>${legend}</header><div class="map-wrap" id="mapSlot"></div></section>
+    <section class="card"><header class="card-h"><div><h3>Live events</h3><p>Newest first.</p></div><button class="btn sm" data-act="nav" data-id="audit">Full log</button></header><ol class="feed">${S.audit.slice(0,14).map(feedItem).join('')}</ol></section>
+  </div>
+  <section class="card"><header class="card-h"><div><h3>Replenishment chain</h3><p>One row per finished part. Demand moves right to left: customer pickup empties the FG rack, which raises a production request, which pulls every sub part in the BOM from Rack A2, then Rack A1, then the supplier.</p></div>${legend}</header>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Finished part</th><th>Sub parts · A2 line feed / A1 drop</th><th>Production</th><th>FG rack</th><th>Customer POs</th></tr></thead><tbody>
+  ${S.fgs.map(f=>{const fg=S.racks[f.rack],al=S.alloc[f.code]||0;
+    const rd=S.orders.filter(o=>o.item===f.code&&o.status==='Ready for pickup').length,wt=S.orders.filter(o=>o.item===f.code&&o.status==='Waiting stock').length;
+    return `<tr><th scope="row">${partCell(f.code)}</th>
+      <td><div class="subs">${f.bom.map(b=>{const s=subOf(b.sub),r2=S.racks[s.r2],r1=S.racks[s.r1];
+        return `<div><span class="code">${b.sub}</span>${gauge(r2)}<span>${chip(LVL[level(r1)][1],'A1 '+r1.qty)}</span></div>`}).join('')||'<span class="sm-muted">No BOM defined</span>'}</div></td>
+      <td>${prCell(f.code)}</td>
+      <td>${gauge(fg)}<div class="meta">${lvlChip(fg)}<span>${fg.qty-al} free · ${al} allocated</span></div></td>
+      <td><div class="meta" style="margin:0">${rd?chip('c-safe',rd+' ready'):''}${wt?chip('c-under',wt+' waiting'):''}${!rd&&!wt?'<span>None open</span>':''}</div></td></tr>`}).join('')}
+  </tbody></table></div></section>`;
+}
+function vProduction(){
+  const list=S.prs.slice(0,30);
+  return pageH('Production Requests','A request is raised automatically when an FG rack\'s free stock reaches its minimum, or manually by a supervisor. Material leaves Rack A2 only when every sub part in the BOM is available. The PROD IN sensor marks the moment it enters the line.',
+    `<label class="switch" for="approval"><input type="checkbox" id="approval" ${S.approval?'checked':''}> Require supervisor approval</label><button class="btn pri" data-act="m-pr">${ic('plus')} New request</button>`)+
+  `<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Request</th><th>Finished part</th><th class="num">Qty</th><th>Trigger</th><th>Material at Rack A2</th><th>Status</th><th></th></tr></thead><tbody>
+  ${list.length?list.map(p=>{const ns=needs(p);
+    return `<tr><td class="code">${p.id}<div class="sm-muted">${fmt(p.t)}</div></td><td>${partCell(p.fg)}</td><td class="num">${p.qty}</td>
+    <td>${chip(p.mode==='Auto'?'c-info':'',p.mode)}<div class="sm-muted" style="margin-top:4px;max-width:260px">${esc(p.reason)}</div></td>
+    <td><div class="mat">${['Done','In production'].includes(p.status)?'<span class="sm-muted">Released to line</span>':ns.map(n=>`<span><b class="code">${n.sub}</b> ${n.need} needed · ${n.have} on rack <span class="${n.have>=n.need?'ok-t':'bad-t'}">${n.have>=n.need?'Ready':'Short '+(n.need-n.have)}</span></span>`).join('')}</div></td>
+    <td>${chip(PC[p.status],p.status)}${p.status==='In production'?`<div class="sm-muted">${Math.max(0,PROD_MIN-(S.t-p.start))} min left</div>`:''}</td>
+    <td>${p.status==='Pending approval'?`<div class="meta" style="margin:0"><button class="btn sm pri" data-act="pr-ok" data-id="${p.id}">Approve</button><button class="btn sm danger" data-act="pr-no" data-id="${p.id}">Reject</button></div>`:''}</td></tr>`}).join(''):`<tr><td colspan="7" class="sm-muted">No production requests yet.</td></tr>`}
+  </tbody></table></div></section>`;
+}
+function grTable(list,forOps){
+  if(!list.length)return '<p class="empty-state">No deliveries to show.</p>';
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Delivery</th>${forOps?'<th>Supplier</th>':''}<th>Item</th><th>Request / contract</th><th class="num">Shipped</th><th class="num">Received</th><th>Difference and reason</th><th>Status</th></tr></thead><tbody>
+  ${list.map(d=>{const rec=d.status==='Received',diff=rec?d.recvQty-d.qty:0;
+    return `<tr><td><span class="code">${d.id}</span><div class="sm-muted">${esc(d.dn)}${d.plate?' · '+esc(d.plate):''}</div></td>${forOps?`<td>${esc(d.supplier)}</td>`:''}<td class="code">${d.item}</td><td>${d.req||d.ct}${d.ct?'<div class="sm-muted">Contract</div>':''}</td>
+    <td class="num">${d.qty}</td><td class="num">${rec?d.recvQty:'—'}</td>
+    <td>${rec?(diff?`${chip(diff<0?'c-empty':'c-over',(diff>0?'+':'')+diff+' pcs')}<div class="sm-muted" style="margin-top:4px">${esc(d.reason)}</div>`:'<span class="sm-muted">None</span>'):'<span class="sm-muted">Not received yet</span>'}</td>
+    <td>${chip(DC[d.status],d.status)}${rec?`<div class="sm-muted">${fmt(d.recvT)}</div>`:''}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+function vInbound(){
+  const dockList=S.deliveries.filter(d=>d.status!=='Received');
+  return pageH('Supplier Drop WH','Suppliers drop sub parts at Rack A1. AMR moves them to Rack A2, which feeds the production conveyor.')+
+  `<section class="card"><header class="card-h"><div><h3>Rack A1 → Rack A2</h3><p>Min is the marker on each bar. Over stock means the rack holds more than its max.</p></div>${legend}</header>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Sub part</th><th>Rack A1 · supplier drop</th><th>Rack A2 · line feed</th><th>AMR transfer</th><th>Supplier request</th></tr></thead><tbody>
+  ${S.subs.map(s=>{const r1=S.racks[s.r1],r2=S.racks[s.r2];
+    const m=S.missions.find(m=>m.type==='TRANSFER'&&m.item===s.code&&live(m));
+    const q=S.signals.find(x=>x.type==='SUPPLIER_REQUEST'&&x.item===s.code&&openSig(x));
+    return `<tr><th scope="row">${partCell(s.code)}<div class="sm-muted">${esc(s.supplier)}</div>${S.contracts.some(c=>c.active&&c.item===s.code)?`<div class="meta" style="margin-top:4px">${chip('c-info','Contract supply')}</div>`:''}</th>
+      <td>${gauge(r1)}<div class="meta"><span>${r1.id}</span>${lvlChip(r1)}</div></td>
+      <td>${gauge(r2)}<div class="meta"><span>${r2.id}</span>${lvlChip(r2)}</div></td>
+      <td>${m?`${mLink(m.id)} ${mChip(m)}<div class="meta">${m.qty} pcs${m.robot?' · '+m.robot:''}</div>`:'<span class="sm-muted">None</span>'}</td>
+      <td>${q?`${chip(SC[q.status],q.status)} ${q.prio==='Urgent'?chip('c-empty','Urgent'):''}<div class="meta">${q.recv} of ${q.qty} received${inflight(q)?` · ${inflight(q)} on the way`:''}${q.eta&&!q.recv?` · ETA ${fmt(q.eta)}`:''}${q.escalated&&q.status==='Open'?' · not acknowledged':''}</div>${q.recv>0&&!inflight(q)?`<div class="meta"><button class="btn sm" data-act="closeshort" data-id="${q.id}">Close at ${q.recv} pcs</button></div>`:''}`:'<span class="sm-muted">None</span>'}</td></tr>`}).join('')}
+  </tbody></table></div></section>
+  <div class="row-3">
+    <section class="card"><header class="card-h"><div><h3>Dock receiving</h3><p>The request closes only after the plant confirms goods receipt.</p></div></header>
+      ${dockList.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${dockList.map(d=>`<tr><td><span class="code">${d.id}</span><div class="sm-muted">${esc(d.dn)}</div></td><td>${esc(d.supplier)}<div class="sm-muted">${d.qty} × ${d.item}</div></td>
+        <td>${d.status==='Arrived'?`<button class="btn sm pri" data-act="m-gr" data-id="${d.id}">Confirm receipt</button>`:d.status==='In transit'?`${chip(DC[d.status],d.status)}<div class="sm-muted">Arrives ${fmt(d.arrive)}</div>`:chip(DC[d.status],'Being prepared')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty-state">No deliveries on the way.</p>'}</section>
+    <section class="card"><header class="card-h"><h3>Zone A robots</h3></header>${robotsList('A')}</section>
+    <section class="card"><header class="card-h"><h3>Recent transfers</h3></header>${missionMini('TRANSFER')}</section>
+  </div>
+  <section class="card"><header class="card-h"><div><h3>Goods receipts</h3><p>Every delivery from suppliers, with the quantity counted at the dock. Differences show the reason the receiver chose.</p></div>
+    <label class="switch" for="grdiff"><input type="checkbox" id="grdiff" ${S.grDiff?'checked':''}> Differences only</label></header>
+    ${grTable(S.deliveries.filter(d=>!S.grDiff||(d.status==='Received'&&d.recvQty!==d.qty)).slice(0,20),true)}</section>`;
+}
+function vFinish(){
+  const ready=S.orders.filter(o=>o.status==='Ready for pickup');
+  return pageH('Finish Goods WH','When production finishes, the OUT sensor fires and an AMR puts the goods away. When free stock reaches the minimum, a production request is raised.')+
+  `<section class="card"><header class="card-h"><h3>Finished goods racks</h3>${legend}</header>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Finished part</th><th>FG rack</th><th class="num">Allocated</th><th class="num">Free</th><th>Production</th><th>AMR put-away</th></tr></thead><tbody>
+  ${S.fgs.map(f=>{const fg=S.racks[f.rack],al=S.alloc[f.code]||0,m=S.missions.find(m=>m.type==='PUTAWAY'&&m.item===f.code&&live(m));
+    return `<tr><th scope="row">${partCell(f.code)}</th><td>${gauge(fg)}<div class="meta"><span>${fg.id}</span>${lvlChip(fg)}</div></td>
+      <td class="num">${al}</td><td class="num">${fg.qty-al}</td><td>${prCell(f.code)}</td>
+      <td>${m?`${mLink(m.id)} ${mChip(m)}<div class="meta">${m.qty} pcs${m.robot?' · '+m.robot:''}</div>`:'<span class="sm-muted">None</span>'}</td></tr>`}).join('')}
+  </tbody></table></div></section>
+  <div class="row-3">
+    <section class="card"><header class="card-h"><div><h3>Customer pickup</h3><p>Scan method is still to be decided. The button stands in for the scan.</p></div></header>
+      ${ready.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${ready.map(o=>`<tr><td class="code">${o.po}</td><td>${esc(o.customer)}</td><td>${o.qty} × ${o.item}</td><td><button class="btn sm pri" data-act="pickup" data-id="${o.po}">Scan pickup</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="empty-state">No orders ready. New POs arrive from ERP every few minutes.</p>'}</section>
+    <section class="card"><header class="card-h"><div><h3>Production handoff</h3><p>IN/OUT sensor events at the production boundary.</p></div></header>
+      <ol class="feed">${S.audit.filter(a=>a.src==='Sensor').slice(0,6).map(feedItem).join('')}</ol></section>
+    <section class="card"><header class="card-h"><h3>Zone C robots</h3></header>${robotsList('C')}</section>
+  </div>`;
+}
+function vOrders(){
+  return pageH('Customer Orders','Customer POs pulled from ERP. COMS allocates finished goods per PO and hands them to WMS for pickup.',`<button class="btn pri" data-act="pullpo">Pull from ERP</button>`)+
+  `<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>PO</th><th>Customer</th><th>Part</th><th class="num">Qty</th><th>Received</th><th>Status</th><th></th></tr></thead><tbody>
+  ${S.orders.slice(0,40).map(o=>`<tr><td class="code">${o.po}</td><td>${esc(o.customer)}</td><td>${partCell(o.item)}</td><td class="num">${o.qty}</td><td>${fmt(o.t)}</td><td>${chip(OC[o.status],o.status)}</td>
+    <td>${o.status==='Ready for pickup'?`<button class="btn sm pri" data-act="pickup" data-id="${o.po}">Scan pickup</button>`:o.status==='Picked up'?`<span class="sm-muted">Picked ${fmt(o.pickT)}</span>`:''}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+function vMissions(){
+  const transit=S.missions.some(m=>m.status==='In transit');
+  return pageH('AMR Missions','Every task the middleware sent to the Linxin fleet manager. Select a row for lifecycle, location mapping and adapter payload.',
+    `<label class="switch" for="faults"><input type="checkbox" id="faults" ${S.faults?'checked':''}> Random faults</label><button class="btn danger" data-act="fault" ${transit?'':'disabled'}>Inject fault</button>`)+
+  `<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Mission</th><th>Type</th><th>Item</th><th>Route</th><th class="num">Qty</th><th>Robot</th><th>Status</th><th>Progress</th></tr></thead><tbody>
+  ${S.missions.map(m=>`<tr class="click" data-act="mission" data-id="${m.id}"><td>${mLink(m.id)}</td><td>${typeLabel(m.type)}</td><td class="code">${m.item}</td><td>${m.from} → ${m.to}</td><td class="num">${m.qty}</td><td>${m.robot||'—'}</td><td>${mChip(m)}</td>
+    <td><div class="g-bar" style="width:90px"><span style="width:${m.progress*100}%;background:${m.status==='Failed'?'var(--empty)':m.status==='Completed'?'var(--safe)':'var(--primary)'}"></span></div></td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+const SIGTXT={FG_LOW:'FG rack low → production request',RACK2_LOW:'Line-feed rack low → AMR transfer',SUPPLIER_REQUEST:'Drop rack low → supplier replenishment'};
+function vSignals(){
+  const open=S.signals.filter(openSig),closed=S.signals.filter(s=>!openSig(s)).slice(0,12);
+  const li=s=>`<li class="sig"><span class="stripe st-${s.type}"></span><div><div class="top-l">${s.id} · ${SIGTXT[s.type]}</div><div class="route">${esc(s.from)} → ${esc(s.to)}</div></div>
+    <div style="text-align:right">${s.prio==='Urgent'&&openSig(s)?chip('c-empty','Urgent')+' ':''}${chip(SC[s.status],s.status)}<div class="sm-muted">${fmt(s.t)}</div></div>
+    <div class="sdesc">${s.qty} pcs ${s.item}${s.eta&&openSig(s)?` · ETA ${fmt(s.eta)}`:''}${s.ref?` · ${s.ref.startsWith('M-')?mLink(s.ref):s.ref}`:''}</div></li>`;
+  return pageH('Signals','Escalation chain. FG low raises a production request. Rack A2 low triggers an AMR transfer. Rack A1 low notifies the supplier.')+
+  `<section class="card"><header class="card-h"><h3>Open</h3></header>${open.length?`<ul class="sig-list">${open.map(li).join('')}</ul>`:'<p class="empty-state">No open signals. Every rack is above its minimum.</p>'}</section>
+   <section class="card"><header class="card-h"><h3>Recently closed</h3></header>${closed.length?`<ul class="sig-list">${closed.map(li).join('')}</ul>`:'<p class="empty-state">Nothing closed yet.</p>'}</section>`;
+}
+function vMaster(){
+  const tabs=[['fg','Finished parts & BOM'],['sub','Sub parts'],['sup','Suppliers'],['ct','Supply contracts'],['rack','Racks & mapping']];
+  let body='',acts='';
+  if(S.mtab==='fg'){acts=`<button class="btn pri" data-act="m-fg">${ic('plus')} Add finished part</button>`;
+    body=`<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Name</th><th>FG rack</th><th class="num">Min</th><th class="num">Max</th><th>Bill of materials (per unit)</th><th></th></tr></thead><tbody>
+    ${S.fgs.map(f=>{const r=S.racks[f.rack];return `<tr><td class="code">${esc(f.code)}</td><td>${esc(f.name)}</td><td>${f.rack}</td><td class="num">${r.min}</td><td class="num">${r.max}</td>
+      <td><div class="mat">${f.bom.map(b=>`<span><b class="code">${b.sub}</b> × ${b.qty} <span class="sm-muted">${esc(itemName(b.sub))}</span></span>`).join('')||'<span class="bad-t">No BOM</span>'}</div></td>
+      <td><button class="btn sm" data-act="m-fg" data-id="${esc(f.code)}">Edit</button></td></tr>`}).join('')}</tbody></table></div></section>`}
+  if(S.mtab==='sub'){acts=`<button class="btn" data-act="m-import">${ic('upload')} Import CSV</button><button class="btn pri" data-act="m-sub">${ic('plus')} Add sub part</button>`;
+    body=`<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Name</th><th>Supplier</th><th>Rack A1 min / max</th><th>Rack A2 min / max</th><th class="num">Lead time</th><th>Used in</th><th></th></tr></thead><tbody>
+    ${S.subs.map(s=>{const r1=S.racks[s.r1],r2=S.racks[s.r2],used=S.fgs.filter(f=>f.bom.some(b=>b.sub===s.code)).map(f=>f.code);
+      return `<tr><td class="code">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(s.supplier)}</td><td>${s.r1} · ${r1.min} / ${r1.max}</td><td>${s.r2} · ${r2.min} / ${r2.max}</td><td class="num">${s.lead} min</td>
+      <td>${used.length?used.join(', '):'<span class="sm-muted">Not in any BOM</span>'}</td><td><button class="btn sm" data-act="m-sub" data-id="${esc(s.code)}">Edit</button></td></tr>`}).join('')}</tbody></table></div></section>`}
+  if(S.mtab==='sup'){acts=`<button class="btn pri" data-act="m-sup">${ic('plus')} Add supplier</button>`;
+    body=`<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Supplier</th><th>Contact</th><th>Email</th><th>Sub parts</th><th class="num">Open requests</th></tr></thead><tbody>
+    ${S.suppliers.map(p=>`<tr><td class="code">${esc(p.name)}</td><td>${esc(p.contact)}</td><td>${esc(p.email)}</td><td>${S.subs.filter(s=>s.supplier===p.name).map(s=>s.code).join(', ')||'<span class="sm-muted">None yet</span>'}</td>
+      <td class="num">${S.signals.filter(s=>s.type==='SUPPLIER_REQUEST'&&s.to===p.name&&openSig(s)).length}</td></tr>`).join('')}</tbody></table></div></section>`}
+  if(S.mtab==='ct'){acts=`<button class="btn pri" data-act="m-ct">${ic('plus')} Add contract</button>`;
+    body=`<section class="card"><header class="card-h"><div><h3>Supply contracts</h3><p>Standing agreements where the supplier delivers without a request from this app. For now this records which items are covered. Committed quantity is optional.</p></div></header>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Contract</th><th>Supplier</th><th>Sub part</th><th class="num">Committed</th><th class="num">Delivered</th><th class="num">On the way</th><th>Note</th><th>Status</th><th></th></tr></thead><tbody>
+    ${S.contracts.map(c=>`<tr><td class="code">${c.id}</td><td>${esc(c.supplier)}</td><td>${partCell(c.item)}</td><td class="num">${c.committed==null?'Open':c.committed}</td><td class="num">${c.delivered}</td><td class="num">${ctInflight(c)}</td><td>${esc(c.note)}</td>
+      <td>${c.active?chip('c-safe','Active'):chip('','Ended')}</td><td><button class="btn sm" data-act="ct-toggle" data-id="${c.id}">${c.active?'End contract':'Reactivate'}</button></td></tr>`).join('')||'<tr><td colspan="9" class="sm-muted">No contracts yet.</td></tr>'}</tbody></table></div></section>`}
+  if(S.mtab==='rack'){
+    body=`<section class="card"><header class="card-h"><div><h3>Racks</h3><p>Each rack holds one item. Racks are created with their part. Adjust is for cycle counts and min/max changes.</p></div>${legend}</header>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Rack</th><th>Zone</th><th>Item</th><th>Stock</th><th>Status</th><th>Linxin map point</th><th></th></tr></thead><tbody>
+    ${Object.values(S.racks).map(r=>`<tr><td class="code">${r.id}</td><td>${{A1:'A · Supplier drop',A2:'A · Line feed',FG:'C · Finished goods'}[r.zone]}</td><td>${partCell(r.item)}</td><td>${gauge(r)}</td><td>${lvlChip(r)}</td><td>${mp(r.id)}</td>
+      <td><button class="btn sm" data-act="m-rack" data-id="${r.id}">Adjust</button></td></tr>`).join('')}
+    <tr><td class="code">PROD-OUT</td><td>B · Production boundary</td><td><span class="sm-muted">Any finished part</span></td><td></td><td></td><td>${mp('PROD-OUT')}</td><td></td></tr>
+    </tbody></table></div></section>`}
+  return pageH('Master Data','Parts, bill of materials, suppliers and racks. A new part gets its own racks and Linxin map points automatically.',acts)+
+    `<div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${S.mtab===k}" data-act="mtab" data-id="${k}">${l}</button>`).join('')}</div>`+body;
+}
+function vSupplier(){
+  if(S.role==='ops'){
+    return pageH('Supplier Portal','Suppliers sign in to a public portal that shows only their own parts and requests. Use the user menu at the top right to view a supplier\'s screen.')+
+    `<section class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Supplier</th><th>Sub parts</th><th class="num">Open</th><th>Waiting acknowledgement</th><th></th></tr></thead><tbody>
+    ${S.suppliers.map(p=>{const rs=S.signals.filter(s=>s.type==='SUPPLIER_REQUEST'&&s.to===p.name&&openSig(s)),w=rs.filter(s=>s.status==='Open').length;
+      return `<tr><td class="code">${esc(p.name)}</td><td>${S.subs.filter(s=>s.supplier===p.name).map(s=>s.code).join(', ')||'—'}</td><td class="num">${rs.length}</td><td>${w?chip('c-under',w+' waiting'):chip('c-safe','None')}</td>
+      <td><button class="btn sm" data-act="as" data-id="${esc(p.name)}">View as supplier</button></td></tr>`}).join('')}</tbody></table></div></section>`;
+  }
+  const n=S.role,mine=S.subs.filter(s=>s.supplier===n),reqs=S.signals.filter(s=>s.type==='SUPPLIER_REQUEST'&&s.to===n);
+  const open=reqs.filter(openSig).sort((a,b)=>(b.prio==='Urgent')-(a.prio==='Urgent')||a.t-b.t),done=reqs.filter(s=>!openSig(s)).slice(0,8);
+  const acts=s=>{
+    if(s.status==='Open')return `<button class="btn sm pri" data-act="ack" data-id="${s.id}" data-eta="30">Acknowledge · ETA 30 min</button>`;
+    const rem=remaining(s);
+    return `${rem>0?`<button class="btn sm pri" data-act="m-asn" data-id="${s.id}">${ic('truck')} Create delivery</button>`:'<span class="sm-muted">All quantity planned</span>'}`;
+  };
+  const dAct=d=>{
+    if(d.status==='Ready to ship')return `<span class="sm-muted">Dispatch, travel time</span>${[15,30,60].map(m=>`<button class="btn sm" data-act="dispatch" data-id="${d.id}" data-min="${m}">${m} min</button>`).join('')}`;
+    if(d.status==='In transit')return `<span class="sm-muted">Arrives ${fmt(d.arrive)}</span>`;
+    if(d.status==='Arrived')return `<span class="sm-muted">At plant dock, waiting receipt</span>`;
+    return `<span class="sm-muted">${d.recvQty} pcs received ${fmt(d.recvT)}${d.recvQty!==d.qty?' · '+esc(d.reason):''}</span>`;
+  };
+  const progress=s=>{const inf=inflight(s),rem=remaining(s);
+    return `<div class="rq-prog"><div class="g-bar"><span style="width:${Math.min(100,s.recv/s.qty*100)}%;background:var(--safe)"></span><span style="left:${Math.min(100,s.recv/s.qty*100)}%;width:${Math.min(100,inf/s.qty*100)}%;background:var(--info);opacity:.55"></span></div>
+      <span>Requested <b>${s.qty}</b> · received <b>${s.recv}</b> · on the way <b>${inf}</b> · not yet planned <b>${rem}</b></span></div>`};
+  const dlist=s=>{const ds=S.deliveries.filter(d=>d.req===s.id);return ds.length?`<div class="dl">${ds.map(d=>`<div class="dl-row"><span class="code">${d.id}</span><span>${esc(d.dn)}</span><span>${d.qty} pcs</span>${chip(DC[d.status],d.status)}<span class="dl-act">${dAct(d)}</span></div>`).join('')}</div>`:''};
+  return pageH(esc(n),'Replenishment requests from the plant and the current stock of your parts at the drop racks.')+
+  `<section class="card"><header class="card-h"><div><h3>Requests to fulfil</h3><p>Urgent means the drop rack is empty. Requests close when the plant confirms receipt.</p></div></header>
+  ${open.length?`<div class="reqs">${open.map(s=>{const p=subOf(s.item);return `<div class="req ${s.prio==='Urgent'?'urgent':''}"><div><h4>${s.prio==='Urgent'?chip('c-empty','Urgent'):chip('','Normal')} ${s.qty} pcs ${s.item} · ${esc(p.name)}</h4>
+    <p>${s.id} · requested ${fmt(s.t)} · deliver to Rack ${p.r1}${s.eta?` · your ETA ${fmt(s.eta)}`:''}</p>${s.status!=='Open'?progress(s):''}</div><div class="acts">${acts(s)}</div>${dlist(s)}</div>`}).join('')}</div>`:'<p class="empty-state">No open requests. You will get a notification when the plant needs more stock.</p>'}</section>
+  <section class="card"><header class="card-h"><h3>Your parts at the plant</h3>${legend}</header>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Part</th><th>Drop rack</th><th>Stock</th><th>Status</th></tr></thead><tbody>
+    ${mine.map(s=>{const r1=S.racks[s.r1];return `<tr><td>${partCell(s.code)}</td><td>${r1.id}</td><td>${gauge(r1)}</td><td>${lvlChip(r1)}</td></tr>`}).join('')||'<tr><td colspan="4" class="sm-muted">No parts assigned yet.</td></tr>'}
+    </tbody></table></div></section>
+  ${S.contracts.some(c=>c.supplier===n&&c.active)?`<section class="card"><header class="card-h"><div><h3>Contract supply</h3><p>Items you supply under a standing contract. You can ship at any time without waiting for a request. The quantity is confirmed by the count at the plant dock.</p></div></header>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Contract</th><th>Part</th><th class="num">Committed</th><th class="num">Delivered</th><th class="num">On the way</th><th>Remaining</th><th></th></tr></thead><tbody>
+    ${S.contracts.filter(c=>c.supplier===n&&c.active).map(c=>{const cap=ctRemaining(c);return `<tr><td class="code">${c.id}<div class="sm-muted">${esc(c.note)}</div></td><td>${partCell(c.item)}</td><td class="num">${c.committed==null?'Open':c.committed}</td><td class="num">${c.delivered}</td><td class="num">${ctInflight(c)}</td>
+      <td>${cap===Infinity?'<span class="sm-muted">No limit</span>':cap}</td><td><button class="btn sm pri" data-act="m-asn" data-id="${c.id}" ${cap<=0?'disabled':''}>${ic('truck')} Create delivery</button></td></tr>`}).join('')}</tbody></table></div></section>`:''}
+  <section class="card"><header class="card-h"><div><h3>Your deliveries</h3><p>What you shipped and what the plant counted at the dock. A difference shows the reason given by the receiver.</p></div></header>
+    ${grTable(S.deliveries.filter(d=>d.supplier===n).slice(0,20),false)}</section>
+  <section class="card"><header class="card-h"><h3>History</h3></header>
+    ${done.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${done.map(s=>`<tr><td class="code">${s.id}</td><td>${s.item}</td><td>${s.status==='Declined'?'Declined':`${s.recv} of ${s.qty} pcs received · ${S.deliveries.filter(d=>d.req===s.id).length} deliveries`}</td><td>${chip(SC[s.status],s.status)}</td><td class="sm-muted">${fmt(s.t)} → ${fmt(s.doneT)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty-state">Nothing closed yet this shift.</p>'}</section>`;
+}
+function vAudit(){
+  const srcs=['All','ERP','COMS','WMS','Middleware','Linxin','Sensor','Supplier'];
+  const rows=S.audit.filter(a=>S.auditFilter==='All'||a.src===S.auditFilter).slice(0,100);
+  const last=s=>{const a=S.audit.find(a=>a.src===s);return a?fmt(a.t):'—'};
+  return pageH('Log Trails','Connection status, and every request, mission, status change and confirmation.')+
+  `<section class="card"><header class="card-h"><h3>Integrations</h3></header><div class="integ">
+    <div><b>ERP connector</b>${chip('c-safe','Connected')}<span>Pulls customer POs into COMS. Last event ${last('ERP')}.</span></div>
+    <div><b>WMS ↔ COMS</b>${chip('c-safe','Internal')}<span>One application with shared parts, racks and audit trail.</span></div>
+    <div><b>Linxin fleet manager</b>${chip('c-info','Simulated')}<span>Vendor adapter. Protocol to confirm with Linxin: REST, MQTT or VDA 5050. Last event ${last('Linxin')}.</span></div>
+    <div><b>Production sensors</b>${chip('c-info','Proposed')}<span>IN/OUT sensors at the kanban boundary. Last event ${last('Sensor')}.</span></div>
+  </div></section>
+  <section class="card"><header class="card-h"><h3>Audit log</h3></header>
+    <div class="filters" role="group" aria-label="Filter by source">${srcs.map(s=>`<button data-act="afilter" data-id="${s}" aria-pressed="${S.auditFilter===s}">${s}</button>`).join('')}</div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Time</th><th>Source</th><th>Event</th></tr></thead><tbody>
+    ${rows.map(a=>`<tr><td>${fmt(a.t)}</td><td><span class="src">${a.src}</span></td><td>${esc(a.msg)}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+function vDrawer(m){
+  const payload={missionId:m.id,taskType:'TRANSPORT',priority:m.prio,robotGroup:'ZONE_'+m.zone,
+    steps:[{action:'PICK',mapPoint:mp(m.from),location:m.from},{action:'DROP',mapPoint:mp(m.to),location:m.to}],
+    load:{sku:m.item,quantity:m.qty,uom:'PCS'},callback:'/api/amr/missions/'+m.id+'/status'};
+  return `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Mission ${m.id}">
+    <header><div><div class="eyebrow">${typeLabel(m.type)}</div><h2>${m.id}</h2></div><button class="icon-btn" data-act="close" aria-label="Close">${ic('x')}</button></header>
+    <div>${mChip(m)}</div>
+    ${m.status==='Failed'?`<div class="fault"><div><b>${esc(m.fault)}</b><p class="note-s">Robot ${m.robot} stopped at ${Math.round(m.progress*100)}% of the route.</p></div>
+      <div class="acts"><button class="btn pri" data-act="retry" data-id="${m.id}">Retry mission</button>${m.type==='TRANSFER'?`<button class="btn danger" data-act="cancel" data-id="${m.id}">Cancel and return stock</button>`:''}</div>
+      ${m.type==='PUTAWAY'?'<p class="note-s">Put-away cannot be cancelled. The goods are already off the production line.</p>':''}</div>`:''}
+    <dl class="kv"><dt>Item</dt><dd>${m.item} · ${esc(itemName(m.item))}</dd><dt>Quantity</dt><dd>${m.qty} pcs</dd><dt>Robot</dt><dd>${m.robot||'Not assigned'}</dd><dt>Zone</dt><dd>${m.zone==='A'?'A · Supplier drop':'C · Finished goods'}</dd><dt>Progress</dt><dd>${Math.round(m.progress*100)}%</dd></dl>
+    <div><h4>Location mapping</h4><div class="tbl-wrap"><table class="tbl"><thead><tr><th></th><th>Business location</th><th>Map point</th></tr></thead><tbody>
+      <tr><td>Pick</td><td>${locName(m.from)}</td><td>${mp(m.from)}</td></tr><tr><td>Drop</td><td>${locName(m.to)}</td><td>${mp(m.to)}</td></tr></tbody></table></div></div>
+    <div><h4>Lifecycle</h4><ol class="tl">${m.history.map(h=>`<li class="${h.s==='Failed'?'bad':h.s==='Cancelled'?'':'done'}"><span>${h.s}</span><time>${fmt(h.t)}</time></li>`).join('')}</ol></div>
+    <div><h4>Adapter payload</h4><pre>${esc(JSON.stringify(payload,null,2))}</pre><p class="note-s" style="margin-top:6px">Example only. The final format follows the Linxin fleet manager API.</p></div>
+  </aside>`;
+}
+
+/* ---------- modals (rendered on demand, never on tick) ---------- */
+const field=(id,label,val,attrs='',hint='',err='')=>`<div class="field ${attrs.includes('data-full')?'full':''}"><label for="${id}">${label}</label><input id="${id}" value="${esc(val)}" ${attrs}>${hint?`<span class="hint">${hint}</span>`:''}${err?`<span class="err">${err}</span>`:''}</div>`;
+const selectF=(id,label,val,opts,err='')=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option value="${esc(o[0])}" ${o[0]===val?'selected':''}>${esc(o[1])}</option>`).join('')}</select>${err?`<span class="err">${err}</span>`:''}</div>`;
+const mHead=(t,p)=>`<header><div><h2 id="mtitle">${t}</h2>${p?`<p>${p}</p>`:''}</div><button type="button" class="icon-btn" data-act="mclose" aria-label="Close">${ic('x')}</button></header>`;
+const mFoot=l=>`<div class="mfoot"><button type="button" class="btn" data-act="mclose">Cancel</button><button type="submit" class="btn pri">${l}</button></div>`;
+function renderModal(){
+  const el=document.getElementById('modal'),M=S.modal;
+  if(!M){el.innerHTML='';return}
+  const d=M.d,e=M.e||{};let h='';
+  if(M.kind==='fg'){
+    const subs=S.subs.map(s=>[s.code,`${s.code} · ${s.name}`]);
+    h=`<form id="f-fg" novalidate>${mHead(d.edit?'Edit finished part':'Add finished part','The FG rack and its Linxin map point are created with the part.')}
+    <div class="fgrid">${field('fg-code','Part code',d.code,d.edit?'readonly':'required placeholder="e.g. IMP-510"','',e.code)}${field('fg-name','Name',d.name,'required placeholder="e.g. Impeller"','',e.name)}
+    ${field('fg-min','FG rack min',d.min,'inputmode="numeric"','Production request is raised at this free stock.',e.min)}${field('fg-max','FG rack max',d.max,'inputmode="numeric"','Above this is over stock.',e.max)}</div>
+    <div class="bom"><span class="flabel">Bill of materials</span><span class="hint">Sub parts needed to make one unit.</span>
+    ${d.bom.map((b,i)=>`<div class="bom-row" data-bom="${i}"><select aria-label="Sub part ${i+1}">${subs.map(o=>`<option value="${esc(o[0])}" ${o[0]===b.sub?'selected':''}>${esc(o[1])}</option>`).join('')}</select><input aria-label="Quantity per unit" inputmode="numeric" value="${esc(b.qty)}"><button type="button" class="icon-btn" data-act="bomdel" data-id="${i}" aria-label="Remove row">${ic('x')}</button></div>`).join('')}
+    ${e.bom?`<span class="err">${e.bom}</span>`:''}<div><button type="button" class="btn sm" data-act="bomadd">${ic('plus')} Add sub part</button></div></div>${mFoot(d.edit?'Save changes':'Add part')}</form>`;
+  }
+  if(M.kind==='sub'){
+    h=`<form id="f-sub" novalidate>${mHead(d.edit?'Edit sub part':'Add sub part','Racks A1 and A2 and their map points are created with the part. New racks start empty, so a supplier request goes out right away.')}
+    <div class="fgrid">${field('sb-code','Part code',d.code,d.edit?'readonly':'required placeholder="e.g. SEL-510"','',e.code)}${field('sb-name','Name',d.name,'required placeholder="e.g. Shaft seal"','',e.name)}
+    ${selectF('sb-sup','Supplier',d.supplier,S.suppliers.map(p=>[p.name,p.name]),e.supplier)}${field('sb-lead','Lead time (min)',d.lead,'inputmode="numeric"','',e.lead)}
+    ${field('sb-a1min','Rack A1 min',d.a1min,'inputmode="numeric"','Supplier request below this.',e.a1)}${field('sb-a1max','Rack A1 max',d.a1max,'inputmode="numeric"')}
+    ${field('sb-a2min','Rack A2 min',d.a2min,'inputmode="numeric"','AMR transfer below this.',e.a2)}${field('sb-a2max','Rack A2 max',d.a2max,'inputmode="numeric"')}</div>${mFoot(d.edit?'Save changes':'Add sub part')}</form>`;
+  }
+  if(M.kind==='sup'){
+    h=`<form id="f-sup" novalidate>${mHead('Add supplier','The supplier gets a portal account that shows only their own parts.')}
+    <div class="fgrid">${field('sp-name','Company name',d.name,'required data-full placeholder="e.g. PT Mitra Presisi"','',e.name)}${field('sp-contact','Contact person',d.contact,'')}${field('sp-email','Email',d.email,'type="email"','',e.email)}</div>${mFoot('Add supplier')}</form>`;
+  }
+  if(M.kind==='import'){
+    h=`<form id="f-import" novalidate>${mHead('Import sub parts','Paste rows from Excel or a CSV file. One sub part per line.')}
+    <div class="field"><label for="im-text">Rows</label><textarea id="im-text" spellcheck="false">${esc(d.text)}</textarea>
+    <span class="hint">Columns: code, name, supplier, A1 min, A1 max, A2 min, A2 max. Supplier must already exist.</span></div>
+    ${M.result?`<div class="${M.result.bad.length?'errbox':'hint'}">${M.result.ok} row(s) imported.${M.result.bad.length?`<ul>${M.result.bad.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`:''}</div>`:''}${mFoot('Import')}</form>`;
+  }
+  if(M.kind==='pr'){
+    h=`<form id="f-pr" novalidate>${mHead('New production request','For example, a large PO that should be produced ahead of the automatic trigger.')}
+    <div class="fgrid">${selectF('pr-fg','Finished part',d.fg,S.fgs.map(f=>[f.code,`${f.code} · ${f.name}`]))}${field('pr-qty','Quantity',d.qty,'inputmode="numeric"','',e.qty)}
+    ${field('pr-reason','Reason',d.reason,'data-full placeholder="e.g. Advance build for PO-2610-0420"','',e.reason)}</div>${mFoot('Create request')}</form>`;
+  }
+  if(M.kind==='rack'){
+    const r=S.racks[d.id];
+    h=`<form id="f-rack" novalidate>${mHead('Adjust rack '+r.id,`${r.item} · ${esc(itemName(r.item))}. Use after a cycle count, or to change min/max.`)}
+    <div class="fgrid">${field('rk-qty','Counted stock',d.qty,'inputmode="numeric"','',e.qty)}${field('rk-reason','Reason',d.reason,'placeholder="e.g. Cycle count"')}
+    ${field('rk-min','Min',d.min,'inputmode="numeric"','',e.min)}${field('rk-max','Max',d.max,'inputmode="numeric"')}</div>${mFoot('Save')}</form>`;
+  }
+  if(M.kind==='asn'){
+    const c=d.ct?ctOf(d.ct):null,s=c?{id:c.id,item:c.item,qty:0,recv:0}:S.signals.find(x=>x.id===d.req),p=subOf(s.item),cap=c?ctRemaining(c):remaining(s);
+    h=`<form id="f-asn" novalidate>${mHead('Create delivery',`${c?'Contract ':''}${s.id} · ${s.item} ${esc(p.name)} · deliver to Rack ${p.r1}`)}
+    <div class="dl-sum">${c?`<span>Contract <b>${c.committed==null?'Open quantity':c.committed}</b></span><span>Delivered <b>${c.delivered}</b></span><span>On the way <b>${ctInflight(c)}</b></span><span>Can still ship <b>${cap===Infinity?'No limit':cap}</b></span>`:`<span>Requested <b>${s.qty}</b></span><span>Received <b>${s.recv}</b></span><span>On the way <b>${inflight(s)}</b></span><span>Can still ship <b>${remaining(s)}</b></span>`}</div>
+    <div class="fgrid">${field('as-qty','Quantity to ship',d.qty,'inputmode="numeric"',cap===Infinity?'No quantity limit on this contract.':`Up to ${cap} pcs.`,e.qty)}${field('as-dn','Delivery note no.',d.dn,'placeholder="e.g. SJ/PRI/2610/0045"','',e.dn)}
+    ${field('as-plate','Vehicle plate',d.plate,'placeholder="e.g. B 9123 KX"','Optional.')}<div></div>
+    ${c?'':`<div class="field full"><div class="delay-box"><label class="chk-l" for="as-delay-on"><input type="checkbox" id="as-delay-on" ${d.delayOn?'checked':''}> This delivery is delayed</label>
+      <div class="delay-in" id="as-delay-wrap" ${d.delayOn?'':'hidden'}><input id="as-delay" inputmode="numeric" placeholder="0" value="${esc(d.delay)}" aria-label="Delay in minutes"><span>minutes after the current ETA${s.eta!=null?` (${fmt(s.eta)})`:''}</span></div>
+      ${e.delay?`<span class="err">${e.delay}</span>`:''}</div></div>`}</div>${mFoot('Mark ready to ship')}</form>`;
+  }
+  if(M.kind==='gr'){
+    const dl=S.deliveries.find(x=>x.id===d.id),rk=S.racks[subOf(dl.item).r1];
+    h=`<form id="f-gr" novalidate>${mHead('Goods receipt '+dl.id,`${esc(dl.supplier)} · ${esc(dl.dn)}${dl.plate?' · '+esc(dl.plate):''} · into Rack ${subOf(dl.item).r1}`)}
+    <div class="dl-sum"><span>Item <b>${dl.item}</b></span><span>Shipped <b>${dl.qty}</b></span><span>${dl.ct?'Contract':'Request'} <b>${dl.ct||dl.req}</b></span><span>Rack ${rk.id} now <b>${rk.qty} / ${rk.max}</b></span></div>
+    ${rk.qty+dl.qty>rk.max?`<div class="errbox">Receiving all ${dl.qty} pcs puts Rack ${rk.id} over its max (${rk.max}). It will show as Over stock.</div>`:''}
+    <div class="fgrid">${field('gr-qty','Quantity counted at dock',d.qty,'inputmode="numeric"','Only this quantity is added to stock.',e.qty)}
+    ${selectF('gr-reason','Reason if different',d.reason,[['','Same as shipped'],['Short delivery','Short delivery'],['Damaged on arrival','Damaged on arrival'],['Over delivery','Over delivery'],['Count difference','Count difference']],e.reason)}</div>${mFoot('Confirm receipt')}</form>`;
+  }
+  if(M.kind==='ct'){
+    h=`<form id="f-ct" novalidate>${mHead('Add supply contract','A standing agreement. The supplier can create deliveries against it at any time, without a request from this app.')}
+    <div class="fgrid">${selectF('ct-item','Sub part',d.item,S.subs.map(s=>[s.code,`${s.code} · ${s.name} · ${s.supplier}`]),e.item)}
+    ${field('ct-qty','Committed quantity (optional)',d.committed,'inputmode="numeric" placeholder="Empty = open quantity"','Total the supplier commits to deliver. Leave empty if there is no fixed total.',e.qty)}
+    ${field('ct-note','Note',d.note,'data-full placeholder="e.g. Annual agreement 2026"')}</div>${mFoot('Add contract')}</form>`;
+  }
+  el.innerHTML=`<div class="scrim" data-act="mclose"></div><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">${h}</div>`;
+  const first=el.querySelector('input:not([readonly]),select,textarea');if(first&&!M.kept)first.focus();M.kept=true;
+}
+const val=id=>(document.getElementById(id)?.value??'').trim();
+const int=v=>/^\d+$/.test(String(v).trim())?parseInt(v,10):NaN;
+function syncFG(){const d=S.modal.d;if(!d.edit)d.code=val('fg-code').toUpperCase();d.name=val('fg-name');d.min=val('fg-min');d.max=val('fg-max');
+  d.bom=[...document.querySelectorAll('[data-bom]')].map(r=>({sub:r.querySelector('select').value,qty:r.querySelector('input').value.trim()}))}
+function openModal(kind,id){
+  let d;
+  if(kind==='fg'){const f=id&&fgOf(id);d=f?{edit:true,code:f.code,name:f.name,min:S.racks[f.rack].min,max:S.racks[f.rack].max,bom:f.bom.map(b=>({...b}))}:{code:'',name:'',min:6,max:24,bom:[{sub:S.subs[0]?.code,qty:1}]}}
+  if(kind==='sub'){const s=id&&subOf(id);d=s?{edit:true,code:s.code,name:s.name,supplier:s.supplier,lead:s.lead,a1min:S.racks[s.r1].min,a1max:S.racks[s.r1].max,a2min:S.racks[s.r2].min,a2max:S.racks[s.r2].max}
+    :{code:'',name:'',supplier:S.suppliers[0].name,lead:60,a1min:14,a1max:60,a2min:8,a2max:30}}
+  if(kind==='sup')d={name:'',contact:'',email:''};
+  if(kind==='import')d={text:'SEL-510,Shaft seal,PT Karet Jaya,20,80,10,40\nPIN-118,Dowel pin 6 mm,PT Sinar Logam,100,400,40,150'};
+  if(kind==='pr')d={fg:S.fgs[0].code,qty:10,reason:''};
+  if(kind==='rack'){const r=S.racks[id];d={id,qty:r.qty,min:r.min,max:r.max,reason:''}}
+  if(kind==='asn'){
+    if(id.startsWith('CT-')){const c=ctOf(id),cap=ctRemaining(c);d={ct:id,qty:cap===Infinity?'':Math.min(cap,50),dn:`SJ/${dnPrefix(c.supplier)}/${S.seq.d+1}`,plate:'',delayOn:false,delay:''}}
+    else{const s=S.signals.find(x=>x.id===id);d={req:id,qty:remaining(s),dn:autoDN(s),plate:'',delayOn:false,delay:''}}}
+  if(kind==='ct')d={item:S.subs[0].code,committed:'',note:''};
+  if(kind==='gr'){const dl=S.deliveries.find(x=>x.id===id);d={id,qty:dl.qty,reason:''}}
+  S.modal={kind,d,e:{}};renderModal();
+}
+function closeModal(){S.modal=null;renderModal()}
+function submitModal(form){
+  const M=S.modal,e={};
+  if(form==='f-fg'){syncFG();const d=M.d,min=int(d.min),max=int(d.max);
+    if(!d.code)e.code='Enter a part code.';else if(!d.edit&&(fgOf(d.code)||subOf(d.code)))e.code='This code is already used.';
+    if(!d.name)e.name='Enter a name.';if(isNaN(min))e.min='Use a whole number.';if(isNaN(max)||max<=min)e.max='Max must be a whole number above min.';
+    if(!d.bom.length)e.bom='Add at least one sub part.';else if(d.bom.some(b=>isNaN(int(b.qty))||int(b.qty)<1))e.bom='Each quantity must be 1 or more.';else if(new Set(d.bom.map(b=>b.sub)).size<d.bom.length)e.bom='A sub part is listed twice.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    const bom=d.bom.map(b=>({sub:b.sub,qty:int(b.qty)}));
+    if(d.edit){const f=fgOf(d.code);f.name=d.name;f.bom=bom;Object.assign(S.racks[f.rack],{min,max});audit('WMS',`Master data: ${f.code} updated (BOM ${bom.length} line(s), min ${min}, max ${max}).`)}
+    else{addFG(d.code,d.name,[0,min,max],bom);audit('WMS',`Master data: finished part ${d.code} added with rack ${fgOf(d.code).rack}.`);mapEl=null}
+  }
+  if(form==='f-sub'){const d=M.d;if(!d.edit)d.code=val('sb-code').toUpperCase();d.name=val('sb-name');d.supplier=val('sb-sup');d.lead=val('sb-lead');['a1min','a1max','a2min','a2max'].forEach(k=>d[k]=val('sb-'+k));
+    const n=['a1min','a1max','a2min','a2max','lead'].map(k=>int(d[k]));
+    if(!d.code)e.code='Enter a part code.';else if(!d.edit&&(subOf(d.code)||fgOf(d.code)))e.code='This code is already used.';
+    if(!d.name)e.name='Enter a name.';if(isNaN(n[4]))e.lead='Use a whole number.';
+    if(isNaN(n[0])||isNaN(n[1])||n[1]<=n[0])e.a1='Min and max must be whole numbers, max above min.';
+    if(isNaN(n[2])||isNaN(n[3])||n[3]<=n[2])e.a2='Min and max must be whole numbers, max above min.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    if(d.edit){const s=subOf(d.code);s.name=d.name;s.supplier=d.supplier;s.lead=n[4];Object.assign(S.racks[s.r1],{min:n[0],max:n[1]});Object.assign(S.racks[s.r2],{min:n[2],max:n[3]});audit('WMS',`Master data: ${s.code} updated.`)}
+    else{addSub(d.code,d.name,d.supplier,[0,n[0],n[1]],[0,n[2],n[3]],n[4]);audit('WMS',`Master data: sub part ${d.code} added with racks ${subOf(d.code).r1} and ${subOf(d.code).r2}.`);mapEl=null}
+  }
+  if(form==='f-sup'){const d=M.d;d.name=val('sp-name');d.contact=val('sp-contact');d.email=val('sp-email');
+    if(!d.name)e.name='Enter the company name.';else if(S.suppliers.some(p=>p.name.toLowerCase()===d.name.toLowerCase()))e.name='This supplier already exists.';
+    if(d.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))e.email='Enter a valid email address.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    S.suppliers.push({name:d.name,contact:d.contact,email:d.email});addRoleOption(d.name);audit('WMS',`Master data: supplier ${d.name} added.`);
+  }
+  if(form==='f-import'){M.d.text=document.getElementById('im-text').value;let ok=0;const bad=[];
+    M.d.text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach((l,i)=>{
+      const c=l.split(/[,;\t]/).map(x=>x.trim());const code=(c[0]||'').toUpperCase(),n=c.slice(3,7).map(int);
+      if(c.length<7)return bad.push(`Line ${i+1}: needs 7 columns.`);
+      if(subOf(code)||fgOf(code))return bad.push(`Line ${i+1}: ${code} already exists.`);
+      if(!S.suppliers.some(p=>p.name===c[2]))return bad.push(`Line ${i+1}: supplier "${c[2]}" not found.`);
+      if(n.some(isNaN)||n[1]<=n[0]||n[3]<=n[2])return bad.push(`Line ${i+1}: min/max must be whole numbers, max above min.`);
+      addSub(code,c[1],c[2],[0,n[0],n[1]],[0,n[2],n[3]],60);ok++;
+    });
+    if(ok){audit('WMS',`Master data: ${ok} sub part(s) imported.`);mapEl=null}
+    M.result={ok,bad};if(bad.length){renderModal();render();return}
+  }
+  if(form==='f-pr'){const d=M.d;d.fg=val('pr-fg');d.qty=val('pr-qty');d.reason=val('pr-reason');const q=int(d.qty),f=fgOf(d.fg),cap=Math.min(...f.bom.map(b=>Math.floor(S.racks[subOf(b.sub).r2].max/b.qty)));
+    if(isNaN(q)||q<1)e.qty='Use a whole number of 1 or more.';else if(f.bom.length&&q>cap)e.qty=`Maximum ${cap} per request, limited by Rack A2 capacity.`;
+    if(!d.reason)e.reason='Add a short reason for the audit trail.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    createPR(d.fg,q,'Manual',d.reason+' (supervisor)');
+  }
+  if(form==='f-rack'){const d=M.d;['qty','min','max','reason'].forEach(k=>d[k]=val('rk-'+k));const q=int(d.qty),mn=int(d.min),mx=int(d.max);
+    if(isNaN(q))e.qty='Use a whole number.';if(isNaN(mn)||isNaN(mx)||mx<=mn)e.min='Min and max must be whole numbers, max above min.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    const r=S.racks[d.id],old=r.qty;Object.assign(r,{qty:q,min:mn,max:mx});audit('WMS',`${r.id} adjusted ${old} → ${q} pcs (min ${mn}, max ${mx}). ${d.reason||'No reason given'}.`);
+  }
+  if(form==='f-ct'){const d=M.d;d.item=val('ct-item');d.committed=val('ct-qty');d.note=val('ct-note');const q=d.committed===''?null:int(d.committed);
+    if(q!==null&&(isNaN(q)||q<1))e.qty='Leave empty for open quantity, or use a whole number of 1 or more.';
+    if(S.contracts.some(c=>c.active&&c.item===d.item))e.item='This sub part already has an active contract. End it first.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    const c={id:'CT-'+pad2(++S.seq.c),supplier:subOf(d.item).supplier,item:d.item,committed:q,delivered:0,note:d.note||'Standing agreement',active:true,lastT:S.t};
+    S.contracts.push(c);audit('WMS',`Master data: contract ${c.id} added for ${c.item} with ${c.supplier} (${q===null?'open quantity':q+' pcs committed'}).`,c.id);notify(c.supplier,`New supply contract ${c.id} for ${c.item}. You can create deliveries against it at any time.`);
+  }
+  if(form==='f-asn'&&M.d.ct){const d=M.d,c=ctOf(d.ct);d.qty=val('as-qty');d.dn=val('as-dn');d.plate=val('as-plate');const q=int(d.qty),cap=ctRemaining(c);
+    if(!c.active)e.qty='This contract has ended.';else if(isNaN(q)||q<1)e.qty='Use a whole number of 1 or more.';else if(q>cap)e.qty=`Only ${cap} pcs are left on this contract.`;
+    if(!d.dn)e.dn='Enter the delivery note number.';else if(S.deliveries.some(x=>x.dn===d.dn))e.dn='This delivery note number is already used.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    createContractDelivery(c,q,d.dn,d.plate);
+  }
+  else if(form==='f-asn'){const d=M.d,s=S.signals.find(x=>x.id===d.req);d.qty=val('as-qty');d.dn=val('as-dn');d.plate=val('as-plate');d.delayOn=document.getElementById('as-delay-on').checked;d.delay=val('as-delay');const q=int(d.qty),rem=remaining(s),dl=d.delayOn?int(d.delay):0;
+    if(d.delayOn&&(isNaN(dl)||dl<1))e.delay='Enter the delay in whole minutes, or untick the box.';
+    if(!openSig(s))e.qty='This request is already closed.';else if(isNaN(q)||q<1)e.qty='Use a whole number of 1 or more.';else if(q>rem)e.qty=`Only ${rem} pcs are still open on this request.`;
+    if(!d.dn)e.dn='Enter the delivery note number.';else if(S.deliveries.some(x=>x.dn===d.dn))e.dn='This delivery note number is already used.';
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    createDelivery(s,q,d.dn,d.plate,null,dl);
+  }
+  if(form==='f-gr'){const d=M.d,dl=S.deliveries.find(x=>x.id===d.id);d.qty=val('gr-qty');d.reason=val('gr-reason');const q=int(d.qty);
+    if(dl.status!=='Arrived')e.qty='This delivery is no longer waiting at the dock.';else if(isNaN(q))e.qty='Use a whole number.';
+    if(!isNaN(q)&&q!==dl.qty&&!d.reason)e.reason=`Counted ${q} but ${dl.qty} were shipped. Choose a reason.`;
+    if(Object.keys(e).length){M.e=e;renderModal();return}
+    receiveDelivery(dl,q,d.reason||'');
+  }
+  closeModal();render();
+}
+
+/* ---------- floor map ---------- */
+function buildMap(){
+  const H=mapH(),rows=Math.max(S.subs.length,S.fgs.length),bot=H-60;
+  let s=`<svg viewBox="0 0 960 ${H}" class="floor" role="img" aria-label="Floor plan with supplier drop warehouse, production and finished goods warehouse">
+  <text x="12" y="20" class="zl">A · SUPPLIER DROP WH</text><text x="356" y="20" class="zl">B · PRODUCTION</text><text x="612" y="20" class="zl">C · FINISH GOODS WH</text>
+  <rect x="6" y="30" width="338" height="${H-36}" rx="12" class="zone"/><rect x="352" y="30" width="248" height="${H-36}" rx="12" class="zone prod"/><rect x="608" y="30" width="346" height="${H-36}" rx="12" class="zone"/>
+  <text x="36" y="54" class="dtxt">RACK A1 · DROP</text><text x="226" y="54" class="dtxt">RACK A2 · LINE FEED</text><text x="700" y="54" class="dtxt">RACK FG</text>
+  <rect x="368" y="62" width="8" height="${bot-62}" rx="3" class="sens" id="sens-in"/><text x="372" y="${bot+14}" class="dtxt" text-anchor="middle">IN</text>
+  <rect x="576" y="62" width="8" height="${bot-62}" rx="3" class="sens" id="sens-out"/><text x="580" y="${bot+14}" class="dtxt" text-anchor="middle">OUT</text>
+  <text x="476" y="${H/2-6}" class="ptxt">Outside this system</text><text x="476" y="${H/2+12}" class="ptxt s">Kanban · conveyor · AGV SLAM</text>
+  <rect x="616" y="${H-98}" width="44" height="26" rx="4" class="buf"/><text x="638" y="${H-81}" class="dtxt" text-anchor="middle" id="buf-t">OUT 0</text>
+  <rect x="872" y="62" width="62" height="${bot-62}" rx="8" class="counter"/><text transform="translate(907 ${(62+bot)/2}) rotate(-90)" class="ctxt" text-anchor="middle">CUSTOMER PICKUP</text>
+  <rect x="130" y="${H-40}" width="80" height="26" rx="4" class="dock"/><text x="170" y="${H-44}" class="dtxt" text-anchor="middle">DOCK A</text>
+  <rect x="660" y="${H-40}" width="80" height="26" rx="4" class="dock"/><text x="700" y="${H-44}" class="dtxt" text-anchor="middle">DOCK C</text>`;
+  const rack=(id,x)=>{const r=S.racks[id],y=68+rowOf(id)*ROWH;return `<rect x="${x}" y="${y}" width="80" height="38" rx="6" class="rk"/><rect x="${x+1}" y="${y+31}" height="6" width="0" rx="3" class="rkf" id="rkf-${id}"/>
+    <text x="${x+6}" y="${y+12}" class="rk-id">${id} · ${esc(r.item)}</text><text x="${x+6}" y="${y+27}" class="rk-q" id="rkq-${id}">0</text>`};
+  S.subs.forEach(sb=>{const y=68+rowOf(sb.r2)*ROWH;s+=`<line x1="306" y1="${y+19}" x2="368" y2="${y+19}" class="conv" id="conv-${sb.code}"/>`+rack(sb.r1,36)+rack(sb.r2,226)});
+  S.fgs.forEach(f=>{const y=68+rowOf(f.rack)*ROWH;s+=`<line x1="780" y1="${y+19}" x2="872" y2="${y+19}" class="link-l"/>`+rack(f.rack,700)});
+  S.robots.forEach(r=>{s+=`<g class="bot" id="bot-${r.id}"><circle r="10"/><text y="3">${r.id.slice(3)}</text></g>`});
+  const d=document.createElement('div');d.innerHTML=s+'</svg>';mapKey=S.subs.length+'/'+S.fgs.length;return d.firstElementChild;
+}
+function botPos(r){
+  const m=r.mission&&S.missions.find(x=>x.id===r.mission);
+  if(m){const a=locXY(m.from),b=locXY(m.to);if(m.status==='Assigned')return a;const k=Math.min(1,m.progress);return{x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k}}
+  return dock(r.zone,S.robots.filter(x=>x.zone===r.zone).indexOf(r)%2);
+}
+function updateMap(){
+  Object.values(S.racks).forEach(r=>{const f=mapEl.querySelector('#rkf-'+r.id);if(!f)return;f.setAttribute('width',78*Math.min(1,r.qty/r.max));f.setAttribute('class','rkf f-'+level(r));mapEl.querySelector('#rkq-'+r.id).textContent=r.qty});
+  S.robots.forEach(r=>{const g=mapEl.querySelector('#bot-'+r.id),p=botPos(r);g.style.transform=`translate(${p.x}px,${p.y}px)`;g.setAttribute('class','bot b-'+r.status)});
+  mapEl.querySelector('#sens-in').setAttribute('class','sens'+(S.t-S.flash.in<=1?' on':''));
+  mapEl.querySelector('#sens-out').setAttribute('class','sens'+(S.t-S.flash.out<=1?' on':''));
+  const running=new Set(S.prs.filter(p=>p.status==='In production').flatMap(p=>fgOf(p.fg).bom.map(b=>b.sub)));
+  S.subs.forEach(sb=>{const c=mapEl.querySelector('#conv-'+CSS.escape(sb.code));if(c)c.setAttribute('class','conv'+(running.has(sb.code)?' run':''))});
+  mapEl.querySelector('#buf-t').textContent='OUT '+Object.values(S.buffer).reduce((a,b)=>a+b,0);
+}
+
+/* ---------- render ---------- */
+const VIEWS={tower:vTower,production:vProduction,inbound:vInbound,finish:vFinish,orders:vOrders,missions:vMissions,signals:vSignals,master:vMaster,supplier:vSupplier,audit:vAudit};
+function addRoleOption(name){const o=document.createElement('option');o.value=name;o.textContent=name;document.getElementById('role').appendChild(o)}
+function renderNav(){
+  const nav=document.getElementById('nav');
+  if(S.role!=='ops'){nav.innerHTML=`<div class="nav-g">Supplier</div><button aria-current="page" data-act="nav" data-id="supplier">${ic('truck')}<span class="lbl">Supplier Portal</span></button>`;return}
+  const failed=S.missions.filter(m=>m.status==='Failed').length,sig=S.signals.filter(openSig).length,pend=S.prs.filter(p=>p.status==='Pending approval').length;
+  const badge={missions:failed?`<span class="badge hot">${failed}</span>`:'',signals:sig?`<span class="badge">${sig}</span>`:'',production:pend?`<span class="badge hot">${pend}</span>`:''};
+  nav.innerHTML=NAV.map(([g,items])=>`<div class="nav-g">${g}</div>`+items.map(([id,l,i])=>`<button data-act="nav" data-id="${id}" ${S.view===id?'aria-current="page"':''}>${ic(i)}<span class="lbl">${l}</span>${badge[id]||''}</button>`).join('')).join('');
+}
+function renderBell(){
+  const mine=S.notifs.filter(n=>n.to===S.role),unread=mine.filter(n=>!n.read).length;
+  const b=document.getElementById('bellN');b.hidden=!unread;b.textContent=unread>99?'99+':unread;
+  const p=document.getElementById('bellPanel');p.hidden=!S.bell;
+  if(S.bell)p.innerHTML=`<h3>Notifications</h3>${mine.length?`<ul>${mine.slice(0,25).map(n=>`<li><time>${fmt(n.t)}</time><span>${esc(n.msg)}</span></li>`).join('')}</ul>`:'<p class="empty-state" style="padding:16px">No notifications yet.</p>'}`;
+}
+function render(){
+  if(ptrDown){pending=true;return}
+  if(S.role!=='ops')S.view='supplier';
+  document.getElementById('clock').textContent=fmt(S.t);
+  document.getElementById('runBtn').innerHTML=S.running?ic('pause')+'Pause':ic('play')+'Run';
+  document.getElementById('simDot').className='gdot'+(S.running?'':' off');
+  document.getElementById('simTxt').textContent=S.running?'Simulator running':'Simulator paused';
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.id===S.speed)));
+  document.getElementById('autoplay').checked=S.auto;
+  document.getElementById('title').textContent=S.role!=='ops'?'Supplier Portal':TITLES[S.view];
+  document.getElementById('role').value=S.role;
+  document.getElementById('avatar').textContent=S.role==='ops'?'OP':S.role.replace(/^PT\s+/,'').slice(0,2).toUpperCase();
+  document.getElementById('roleSub').textContent=S.role==='ops'?'Supervisor':'Supplier';
+  renderNav();renderBell();
+  document.getElementById('view').innerHTML=VIEWS[S.view]();
+  const slot=document.getElementById('mapSlot');
+  if(slot){if(!mapEl||mapKey!==S.subs.length+'/'+S.fgs.length)mapEl=buildMap();slot.appendChild(mapEl);updateMap()}
+  const m=S.sel&&S.missions.find(x=>x.id===S.sel);
+  document.getElementById('drawer').innerHTML=m?vDrawer(m):'';
+}
+
+/* ---------- events ---------- */
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#modal'))ptrDown=true});
+document.addEventListener('pointerup',()=>{setTimeout(()=>{ptrDown=false;if(pending){pending=false;render()}},0)});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');
+  if(!b){if(S.bell&&!e.target.closest('.bell')){S.bell=false;render()}return}
+  const id=b.dataset.id,find=x=>S.signals.find(s=>s.id===x);
+  switch(b.dataset.act){
+    case'nav':S.view=id;S.sel=null;try{history.replaceState(null,'','#'+id)}catch(_){}window.scrollTo(0,0);break;
+    case'run':S.running=!S.running;schedule();break;
+    case'speed':S.speed=+id;schedule();break;
+    case'reset':clearInterval(timer);initState();buildRoles();schedule();closeModal();break;
+    case'theme':{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=dark?'light':'dark';break}
+    case'bell':S.bell=!S.bell;if(S.bell)S.notifs.filter(n=>n.to===S.role).forEach(n=>n.read=true);break;
+    case'mission':S.sel=id;break;
+    case'close':S.sel=null;break;
+    case'pickup':{const o=S.orders.find(o=>o.po===id);if(o&&o.status==='Ready for pickup'){pickup(o);allocateOrders();checkFG()}break}
+    case'pullpo':pullPO();allocateOrders();break;
+    case'fault':{const m=S.missions.find(m=>m.status==='In transit');if(m)failMission(m,FAULTS[0].replace('{mp}',mp(m.to)));break}
+    case'retry':{const m=S.missions.find(m=>m.id===id);if(m&&m.status==='Failed'){const r=robotOf(m);m.fault=null;
+      if(m.picked){if(r)r.status='Busy';setStatus(m,'In transit')}else{if(r){r.status='Idle';r.mission=null}m.robot=null;setStatus(m,'Queued')}audit('Middleware',`${m.id} retried by operator.`,m.id)}break}
+    case'cancel':{const m=S.missions.find(m=>m.id===id);if(m&&m.type==='TRANSFER'){if(m.picked)S.racks[m.from].qty+=m.qty;const r=robotOf(m);if(r){r.status='Idle';r.mission=null}
+      setStatus(m,'Cancelled');m.fault=null;const sg=S.signals.find(s=>s.ref===m.id);if(sg)sg.status='Cancelled';audit('Middleware',`${m.id} cancelled by operator.${m.picked?` ${m.qty} pcs returned to ${m.from}.`:''}`,m.id);S.sel=null}break}
+    case'pr-ok':{const p=S.prs.find(p=>p.id===id);if(p&&p.status==='Pending approval')approvePR(p,'supervisor');break}
+    case'pr-no':{const p=S.prs.find(p=>p.id===id);if(p&&p.status==='Pending approval'){p.status='Rejected';const sg=S.signals.find(s=>s.ref===p.id);if(sg)sg.status='Cancelled';audit('WMS',`${p.id} rejected by supervisor.`,p.id)}break}
+    case'ack':{const s=find(id);if(s&&s.status==='Open')ackReq(s,+b.dataset.eta);break}
+    case'eta':{const s=find(id);if(s&&s.status==='Acknowledged'){s.eta+=15;audit('Supplier',`${s.to} delayed ${s.id}. New ETA ${fmt(s.eta)}.`,s.id);notify('ops',`${s.to} delayed ${s.id}. New ETA ${fmt(s.eta)}.`)}break}
+    case'dispatch':{const d=S.deliveries.find(d=>d.id===id);if(d&&d.status==='Ready to ship')dispatchDelivery(d,+b.dataset.min);break}
+    case'closeshort':{const s=find(id);if(s&&openSig(s)&&!inflight(s))closeShort(s);break}
+    case'm-asn':openModal('asn',id);return;
+    case'm-ct':openModal('ct');return;
+    case'ct-toggle':{const c=ctOf(id);if(c){c.active=!c.active;audit('WMS',`Contract ${c.id} ${c.active?'reactivated':'ended'} by operations.`,c.id);notify(c.supplier,`Contract ${c.id} (${c.item}) was ${c.active?'reactivated':'ended'} by the plant.`)}break}
+    case'm-gr':openModal('gr',id);return;
+    case'decline':{const s=find(id);if(s&&s.status==='Open')declineReq(s);break}
+    case'afilter':S.auditFilter=id;break;
+    case'mtab':S.mtab=id;break;
+    case'as':S.role=id;S.view='supplier';S.bell=false;break;
+    case'm-fg':openModal('fg',id);return;
+    case'm-sub':openModal('sub',id);return;
+    case'm-sup':openModal('sup');return;
+    case'm-import':openModal('import');return;
+    case'm-pr':openModal('pr');return;
+    case'm-rack':openModal('rack',id);return;
+    case'mclose':closeModal();return;
+    case'bomadd':syncFG();S.modal.d.bom.push({sub:S.subs[0].code,qty:'1'});renderModal();return;
+    case'bomdel':syncFG();S.modal.d.bom.splice(+id,1);renderModal();return;
+  }
+  render();
+});
+document.addEventListener('submit',e=>{e.preventDefault();if(S.modal)submitModal(e.target.id)});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='role'){S.role=t.value;S.view=S.role==='ops'?'tower':'supplier';S.bell=false;S.sel=null;render()}
+  if(t.id==='as-delay-on'){const w=document.getElementById('as-delay-wrap');w.hidden=!t.checked;if(t.checked)document.getElementById('as-delay').focus()}
+  if(t.id==='grdiff'){S.grDiff=t.checked;render()}
+  if(t.id==='faults')S.faults=t.checked;
+  if(t.id==='autoplay')S.auto=t.checked;
+  if(t.id==='approval'){S.approval=t.checked;audit('WMS',`Supervisor approval for production requests turned ${t.checked?'on':'off'}.`)}
+});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(S.modal){closeModal();return}if(S.sel||S.bell){S.sel=null;S.bell=false;render()}});
+
+initState();
+function buildRoles(){document.getElementById('role').innerHTML='<option value="ops">Operations</option>';S.suppliers.forEach(p=>addRoleOption(p.name))}
+buildRoles();
+const h0=(location.hash||'').slice(1);if(VIEWS[h0]&&h0!=='supplier')S.view=h0;
+schedule();render();
+</script>
